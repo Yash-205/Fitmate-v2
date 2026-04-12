@@ -1,0 +1,1 @@
+curl -v http://localhost:8000 -> gives full log
