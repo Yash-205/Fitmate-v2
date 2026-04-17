@@ -61,13 +61,17 @@ Lifestyle/Readiness: Sleep (${sleepQuality}), Stress (${stressLevel}), Diet (${d
       console.error("Mem0 storage error initiation in profile upsert:", err);
     }
 
-    // Phase 1: Generate Strategic Roadmap (Fire & Forget or Await?)
-    // We'll await it so the user sees it immediately on the next page
+    // Phase 1: Generate Strategic Roadmap
     try {
-      
       if (!userId) throw new Error("Unauthorized: User ID missing");
+      console.log(`[Profile] Triggering baseline strategy for User ${userId}...`);
+      
       const strategy = await runStrategyAgent(profile, userId);
       
+      if (!strategy || !strategy.mesoPhases) {
+        throw new Error("AI failed to return mesoPhases for strategy.");
+      }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       let currentMarkerDate = new Date(today);
@@ -75,27 +79,37 @@ Lifestyle/Readiness: Sleep (${sleepQuality}), Stress (${stressLevel}), Diet (${d
       const phasesWithDates = strategy.mesoPhases.map((phase: any) => {
         const start = new Date(currentMarkerDate);
         const end = new Date(currentMarkerDate);
-        end.setDate(end.getDate() + (phase.durationWeeks * 7));
+        // Correct date range (end of the week is start + 7days - 1)
+        end.setDate(end.getDate() + (phase.durationWeeks * 7) - 1);
+        
+        // Next phase starts the day after this one ends
         currentMarkerDate = new Date(end);
+        currentMarkerDate.setDate(end.getDate() + 1);
+        
         return { ...phase, startDate: start, endDate: end };
       });
 
       await WorkoutPlan.findOneAndUpdate(
         { userId },
         {
-          goal: strategy.goal,
-          splitType: strategy.splitType,
-          experienceLevel: strategy.experienceLevel,
-          overarchingStrategy: strategy.overarchingStrategy,
-          weeklyFrequency: strategy.weeklyFrequency,
-          mesoPhases: phasesWithDates,
-          currentPhase: strategy.mesoPhases[0]?.name,
-          schedule: [], // Reset schedule to force new microcycle generation
+          $set: {
+            goal: strategy.goal,
+            splitType: strategy.splitType,
+            experienceLevel: strategy.experienceLevel,
+            overarchingStrategy: strategy.overarchingStrategy,
+            weeklyFrequency: strategy.weeklyFrequency,
+            mesoPhases: phasesWithDates,
+            currentPhase: strategy.mesoPhases[0]?.name,
+            schedule: [], // Force new microcycle on first visit
+            userId: userId
+          }
         },
         { upsert: true, new: true }
       );
+      console.log(`[Profile] Strategy successfully generated and saved for User ${userId}.`);
     } catch (err) {
       console.error("Strategy generation failed during profile upsert:", err);
+      // We don't throw here - we want the profile save to succeed even if AI is slow
     }
 
     res.json(profile);

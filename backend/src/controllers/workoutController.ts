@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { runEvolutionAgent } from "../ai/graphs/evolutionGraph";
+import { runStrategyAgent } from "../ai/graphs/strategyGraph";
+import { generateMicrocycle } from "../ai/nodes/workoutGenerator";
 import WorkoutPlan from "../models/WorkoutPlan";
 import Profile from "../models/Profile";
 
@@ -37,18 +39,31 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
 
     // 1. Get existing plan for context
     const existingPlan = await WorkoutPlan.findOne({ userId });
-    if (!existingPlan) {
-      return res.status(400).json({ message: "No training plan found. Please generate one first." });
-    }
+    
+    let updatedPlanData;
 
-    // 2. Run the Unified Evolution Agent (Interconnected Graph)
-    // This node decides if we need a new Strategy OR just a new Microcycle
-    const updatedPlanData = await runEvolutionAgent(
-      profile, 
-      userId, 
-      existingPlan.toObject(), 
-      feedback
-    );
+    if (!existingPlan) {
+      // FOUNDATION FLOW: User has no plan yet. Generate everything from scratch.
+      console.log(`[Controller] No existing plan for User ${userId}. Starting Foundation Flow...`);
+      const strategy = await runStrategyAgent(profile, userId);
+      // For initial run, we assume feedback is null or the strategy handles it
+      updatedPlanData = await generateMicrocycle({ 
+        profile, 
+        userId, 
+        currentMeso: strategy.mesoPhases[0],
+        finalPlan: { ...strategy, userId, schedule: [] }, 
+        feedback: null,
+        strategyNeeded: true 
+      });
+    } else {
+      // EVOLUTION FLOW: tweak existing plan
+      updatedPlanData = await runEvolutionAgent(
+        profile, 
+        userId, 
+        existingPlan.toObject(), 
+        feedback
+      );
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
