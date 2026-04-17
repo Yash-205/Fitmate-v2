@@ -84,7 +84,7 @@ const Workout: React.FC = () => {
     <div className="min-h-[calc(100vh-80px)] bg-slate-50 p-6 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex justify-end px-2">
-          {plan ? (
+          {plan?.schedule && plan.schedule.length > 0 ? (
             <Button 
               onClick={() => setIsFeedbackOpen(true)} 
               disabled={generating} 
@@ -99,7 +99,7 @@ const Workout: React.FC = () => {
               disabled={generating} 
               className="bg-orange-600 hover:bg-orange-700 shadow-md shadow-orange-500/10 px-8 h-11 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all hover:scale-105 active:scale-95"
             >
-              {generating ? 'AI In Progress...' : 'Generate Neural Plan'}
+              {generating ? 'AI In Progress...' : 'Generate Workout Plan'}
             </Button>
           )}
         </header>

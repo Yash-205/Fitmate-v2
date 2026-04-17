@@ -11,12 +11,13 @@ ${feedback ? `\n<IMPORTANT: USER FEEDBACK>\nThe user has provided feedback on th
 <Task>
 - Design a concrete 7-day microcycle schedule strictly aligned with the Current Phase Focus and any provided feedback.
 - For each training day:
-    - Include a 'warmup' section (3-4 movements, reps/sets).
-    - Include the main training 'exercises'.
-    - Include a 'cooldown' section (2-3 mobility/recovery movements).
+    - Include a brief 'warmup' (2-3 targeted movements).
+    - Include 5-8 main training 'exercises' focused on the daily objective.
+    - Include a brief 'cooldown' (1-2 mobility movements).
 - Select exercises based on priority: Primary Compounds -> Secondary Compounds -> Isolations.
 - Define sets, reps, and intensity (RPE or %) for every exercise.
 - Program progression rules and a deload strategy specific to this phase.
+- BE CONCISE: Avoid unnecessary verbosity in exercise names and notes to ensure the full 7-day plan fits.
 </Task>
 
 <Input Context>

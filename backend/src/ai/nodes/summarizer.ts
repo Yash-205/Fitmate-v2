@@ -1,12 +1,6 @@
-import { ChatGroq } from "@langchain/groq";
 import { SystemMessage, RemoveMessage } from "@langchain/core/messages";
 import { ChatState } from "../graphs/chatGraph";
-
-const getModel = () => new ChatGroq({
-  apiKey: process.env.GROQ_API_KEY,
-  model: "llama-3-8b-8192", // Fast, efficient model for compression
-  temperature: 0,
-});
+import { getFastModel } from "../utils/modelRegistry";
 
 /**
  * Summarization Node
@@ -23,7 +17,7 @@ export const summarizeMessages = async (state: typeof ChatState.State) => {
     return {};
   }
 
-  const model = getModel();
+  const model = getFastModel();
   
   const prompt = summary 
     ? `This is a summary of the conversation so far: "${summary}". 
@@ -40,6 +34,7 @@ export const summarizeMessages = async (state: typeof ChatState.State) => {
   // Delete all messages except the last 2 (the absolute immediate context)
   // This is where "Efficient STM" happens.
   const deleteMessages = messages.slice(0, -2).map((m: any) => {
+    // If LangGraph didn't assign an ID yet, we skip pruning for that specific message
     if (!m.id) return null;
     return new RemoveMessage({ id: m.id });
   }).filter(Boolean);

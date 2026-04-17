@@ -1,97 +1,160 @@
-import { ChatGroq } from "@langchain/groq";
 import { WorkoutState } from "../state/workoutState";
 import { StrategyGeneratorSchema, MicrocycleGeneratorSchema } from "../schemas/workoutSchema";
 import { buildStrategyPrompt } from "../prompts/strategyPrompt";
 import { buildMicrocyclePrompt } from "../prompts/microcyclePrompt";
-import { getMem0Client } from "../memory/mem0Service";
+import { buildIntentEvaluationPrompt } from "../prompts/evolutionPrompt";
+import { searchMemories, addInteraction } from "../memory/mem0Service";
+import { getFastModel } from "../utils/modelRegistry";
+import { z } from "zod";
 
-const getModel = () => new ChatGroq({
-  apiKey: process.env.GROQ_API_KEY,
-  model: "llama-3.3-70b-versatile",
-  temperature: 0.4,
-});
+/**
+ * NEW: Intent Evaluator Node
+ * Determines if feedback warrants a full strategic shift or just a routine tweak.
+ */
+export async function evaluateAdjustmentIntent(state: typeof WorkoutState.State) {
+  try {
+    const { feedback, finalPlan } = state;
+    console.log(`[Node: Evaluator] Starting... Feedback: "${feedback?.slice(0, 50)}..."`);
+    
+    if (!feedback || !finalPlan) {
+      console.log(`[Node: Evaluator] No feedback/plan found. Defaulting to ROUTINE.`);
+      return { strategyNeeded: false };
+    }
+
+    const model = getFastModel();
+    const prompt = buildIntentEvaluationPrompt(finalPlan, feedback);
+    
+    const IntentSchema = z.object({
+      requiresStrategyShift: z.boolean(),
+      reasoning: z.string()
+    });
+
+    const structuredModel = model.withStructuredOutput(IntentSchema);
+    const decision = await structuredModel.invoke(prompt);
+
+    console.log(`[Node: Evaluator] Decision: ${decision.requiresStrategyShift} | Reason: ${decision.reasoning}`);
+
+    return { strategyNeeded: decision.requiresStrategyShift };
+  } catch (error) {
+    console.error(`[Node: Evaluator] FATAL ERROR:`, error);
+    throw error;
+  }
+}
 
 /**
  * PHASE 1: Generate Strategic Roadmap (Macro/Meso)
+ * Enhanced to handle feedback-driven shifts.
  */
 export async function generateStrategy(state: typeof WorkoutState.State) {
-  const model = getModel();
-  const p = state.profile;
-  const userId = state.userId;
-
-  let historicalContext = "No prior strategy found. Starting initial assessment.";
   try {
-    const mem0 = getMem0Client();
-    const memories = await mem0.search("workout preference, fitness style, past success", { filters: { user_id: String(userId) } });
-    if (memories?.results?.length > 0) {
-      historicalContext = memories.results.map((m: any) => m.memory).join("\n");
+    const model = getFastModel();
+    const p = state.profile;
+    const userId = state.userId;
+    const feedback = state.feedback;
+
+    console.log(`[Node: Strategy] Starting regeneration for User ${userId}...`);
+
+    // 1. Retrieve historical context from LTM
+    const historicalContext = await searchMemories(String(userId), "workout preference, fitness style, past success") 
+      || "No prior strategy found. Starting initial assessment.";
+
+    // 2. Build prompt (including feedback if we are in an evolution flow)
+    let strategyPrompt = buildStrategyPrompt(p, historicalContext);
+    if (feedback) {
+      strategyPrompt += `\n\n<CRITICAL ADJUSTMENT REQUEST>\n${feedback}\nYou MUST rebuild the entire strategy roadmap to reflect this instruction.\n</CRITICAL ADJUSTMENT REQUEST>`;
     }
-  } catch (err) {}
 
-  const prompt = buildStrategyPrompt(p, historicalContext);
-  const structuredModel = model.withStructuredOutput(StrategyGeneratorSchema, { name: "training_strategy" });
-  const response = await structuredModel.invoke(prompt);
+    const structuredModel = model.withStructuredOutput(StrategyGeneratorSchema, { name: "training_strategy" });
+    const response = await structuredModel.invoke(strategyPrompt);
 
-  // Sync Strategy to LTM
-  try {
-    const mem0 = getMem0Client();
-    mem0.add([{ role: "assistant", content: `Established Strategic Roadmap: ${response.overarchingStrategy}. Selected Split: ${response.splitType}.` }], { user_id: String(userId) });
-  } catch (err) {}
+    // 3. Sync Strategy to LTM
+    addInteraction(String(userId), [
+      { role: "assistant", content: `Strategic Roadmap Updated: ${response.overarchingStrategy}. New Split: ${response.splitType}. Reason: ${feedback || "Initial Generation"}` }
+    ]);
 
-  return { finalPlan: response };
+    console.log(`[Node: Strategy] Roadmap rebuilt: ${response.splitType} | ${response.mesoPhases.length} phases.`);
+
+    // If this was a regeneration, we update the state with the new phases and currentPhase
+    return { 
+      finalPlan: {
+        ...response,
+        userId: state.userId,
+        currentPhase: response.mesoPhases[0].name,
+        schedule: [] // Clear existing schedule as it's now stale
+      }
+    };
+  } catch (error) {
+    console.error(`[Node: Strategy] FATAL ERROR:`, error);
+    throw error;
+  }
 }
 
 /**
  * PHASE 2: Generate Detailed Microcycle (7-day schedule)
  */
 export async function generateMicrocycle(state: typeof WorkoutState.State) {
-  const model = getModel();
-  const p = state.profile;
-  const userId = state.userId;
-  const currentMeso = state.currentMeso;
-  const feedback = state.feedback;
-
-  if (!currentMeso) throw new Error("No current mesocycle context found for microcycle generation.");
-
-  let historicalContext = "First microcycle for this phase.";
   try {
-    const mem0 = getMem0Client();
-    const memories = await mem0.search("exercise performance, strength numbers, form issues", { filters: { user_id: String(userId) } });
-    if (memories?.results?.length > 0) {
-      historicalContext = memories.results.map((m: any) => m.memory).join("\n");
-    }
-  } catch (err) {}
+    const model = getFastModel();
+    const p = state.profile;
+    const userId = state.userId;
+    const feedback = state.feedback;
+    
+    // Use the new strategy if it was just generated, otherwise use existing
+    const currentPlan = state.finalPlan;
+    if (!currentPlan) throw new Error("No training context found for microcycle generation.");
 
-  const prompt = buildMicrocyclePrompt(p, currentMeso, historicalContext, feedback);
-  const structuredModel = model.withStructuredOutput(MicrocycleGeneratorSchema, { name: "weekly_microcycle" });
-  const response = await structuredModel.invoke(prompt);
+    console.log(`[Node: Microcycle] Generating schedule for Phase: ${currentPlan.currentPhase}...`);
 
-  // Ensure 7 days and correct structure
-  if (Array.isArray(response.schedule) && response.schedule.length < 7) {
-    const existingDays = response.schedule.map((d: any) => d.day);
-    for (let i = 1; i <= 7; i++) {
-      const dayLabel = `Day ${i}`;
-      if (!existingDays.includes(dayLabel)) {
-        response.schedule.push({
-          day: dayLabel,
-          focus: "Rest & Recovery",
-          isRestDay: true,
-          exercises: [],
-        });
+    const currentMeso = currentPlan.mesoPhases.find((m: any) => m.name === currentPlan.currentPhase) || currentPlan.mesoPhases[0];
+
+    // 1. Retrieve performance context from LTM
+    const historicalContext = await searchMemories(String(userId), "exercise performance, strength numbers, form issues")
+      || "First microcycle for this phase.";
+
+    // 2. Generate schedule
+    const prompt = buildMicrocyclePrompt(p, currentMeso, historicalContext, feedback);
+    const structuredModel = model.withStructuredOutput(MicrocycleGeneratorSchema, { name: "weekly_microcycle" });
+    const response = await structuredModel.invoke(prompt);
+
+    // 3. Ensure 7 days and correct structure (Validation Logic)
+    if (Array.isArray(response.schedule) && response.schedule.length < 7) {
+      const existingDays = response.schedule.map((d: any) => d.day);
+      for (let i = 1; i <= 7; i++) {
+        const dayLabel = `Day ${i}`;
+        if (!existingDays.includes(dayLabel)) {
+          response.schedule.push({
+            day: dayLabel,
+            focus: "Rest & Recovery",
+            isRestDay: true,
+            exercises: [],
+          });
+        }
       }
+      response.schedule.sort((a: any, b: any) => {
+        const getNum = (dayStr: string) => parseInt(dayStr.replace(/[^0-9]/g, ""), 10) || 0;
+        return getNum(a.day) - getNum(b.day);
+      });
     }
-    response.schedule.sort((a: any, b: any) => {
-      const getNum = (dayStr: string) => parseInt(dayStr.replace(/[^0-9]/g, ""), 10) || 0;
-      return getNum(a.day) - getNum(b.day);
-    });
+
+    // 4. Sync Microcycle to LTM
+    addInteraction(String(userId), [
+      { role: "assistant", content: `Programmed Microcycle for ${currentMeso.name}: ${response.schedule.map((d:any) => d.focus).join(", ")}.` }
+    ]);
+
+    console.log(`[Node: Microcycle] Schedule complete. User: ${userId}`);
+
+    // 5. Merge new microcycle into the final plan
+    return { 
+      finalPlan: {
+        ...currentPlan,
+        schedule: response.schedule,
+        progressionRule: response.progressionRule,
+        deloadStrategy: response.deloadStrategy,
+      }
+    };
+  } catch (error) {
+    console.error(`[Node: Microcycle] FATAL ERROR:`, error);
+    throw error;
   }
-
-  // Sync Microcycle to LTM
-  try {
-    const mem0 = getMem0Client();
-    mem0.add([{ role: "assistant", content: `Programmed Microcycle for ${currentMeso.name}: ${response.schedule.map((d:any) => d.focus).join(", ")}. Progression rule: ${response.progressionRule}.` }], { user_id: String(userId) });
-  } catch (err) {}
-
-  return { finalPlan: response };
 }
 
