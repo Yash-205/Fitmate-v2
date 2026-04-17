@@ -8,8 +8,6 @@ import profileRoutes from "./routes/profileRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import workoutRoutes from "./routes/workoutRoutes";
 
-
-
 // connect database
 connectDB();
 

@@ -1,8 +1,9 @@
 import { Response } from "express";
+import { randomUUID } from "crypto";
 import { AuthRequest } from "../types/express";
 import Profile from "../models/Profile";
 import ChatSession from "../models/ChatSession";
-import { runAgent, getAgentHistory } from "../ai/agent";
+import { streamAgent, getAgentHistory } from "../ai/graphs/chatGraph";
 
 export const chat = async (req: AuthRequest, res: Response) => {
   try {
@@ -15,7 +16,7 @@ export const chat = async (req: AuthRequest, res: Response) => {
 
     let threadId = providedThreadId;
     if (!threadId) {
-      threadId = "thread_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+      threadId = "thread_" + randomUUID();
       await ChatSession.create({
         userId: req.userId,
         threadId,
@@ -25,12 +26,33 @@ export const chat = async (req: AuthRequest, res: Response) => {
       await ChatSession.findOneAndUpdate({ threadId, userId: req.userId }, { updatedAt: new Date() });
     }
 
-    const reply = await runAgent(message, profile, threadId);
+    // Prepare SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    res.json({ reply, threadId });
+    const eventStream = await streamAgent(message, profile, threadId);
+    
+    for await (const event of eventStream) {
+      if (event.event === "on_chat_model_stream") {
+        const chunk = event.data?.chunk?.content;
+        if (chunk) {
+          res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        }
+      }
+    }
+
+    res.write(`data: ${JSON.stringify({ done: true, threadId })}\n\n`);
+    res.end();
   } catch (err: any) {
-    console.log(err);
-    res.status(500).json({ message: "Chat failed: " + err.message });
+    console.error("Streaming error:", err);
+    // If headers already sent, we can't send status 500
+    if (!res.headersSent) {
+      res.status(500).json({ message: "Chat failed: " + err.message });
+    } else {
+      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      res.end();
+    }
   }
 };
 
