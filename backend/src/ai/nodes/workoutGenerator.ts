@@ -22,7 +22,9 @@ export async function evaluateAdjustmentIntent(state: typeof WorkoutState.State)
     }
 
     const model = getFastModel();
-    const prompt = buildIntentEvaluationPrompt(finalPlan, feedback);
+    // HARDENING: Overriding "Elite Coach" personality for strict logic
+    const prompt = `STRICT DATA MODE: Analyze the following request and plan. Output ONLY the tool call. No preamble.
+    ${buildIntentEvaluationPrompt(finalPlan, feedback)}`;
     
     const IntentSchema = z.object({
       requiresStrategyShift: z.boolean(),
@@ -54,33 +56,33 @@ export async function generateStrategy(state: typeof WorkoutState.State) {
 
     console.log(`[Node: Strategy] Starting regeneration for User ${userId}...`);
 
-    // 1. Retrieve historical context from LTM
     const historicalContext = await searchMemories(String(userId), "workout preference, fitness style, past success") 
       || "No prior strategy found. Starting initial assessment.";
 
-    // 2. Build prompt (including feedback if we are in an evolution flow)
     let strategyPrompt = buildStrategyPrompt(p, historicalContext);
     if (feedback) {
       strategyPrompt += `\n\n<CRITICAL ADJUSTMENT REQUEST>\n${feedback}\nYou MUST rebuild the entire strategy roadmap to reflect this instruction.\n</CRITICAL ADJUSTMENT REQUEST>`;
     }
 
-    const structuredModel = model.withStructuredOutput(StrategyGeneratorSchema, { name: "training_strategy" });
-    const response = await structuredModel.invoke(strategyPrompt);
+    // HARDENING: Ensure tool-calling stability
+    const finalPrompt = `STRICT DATA MODE: GENERATE LONG-TERM STRATEGY. Output ONLY the tool call. No preamble.
+    ${strategyPrompt}`;
 
-    // 3. Sync Strategy to LTM
+    const structuredModel = model.withStructuredOutput(StrategyGeneratorSchema, { name: "training_strategy" });
+    const response = await structuredModel.invoke(finalPrompt);
+
     addInteraction(String(userId), [
       { role: "assistant", content: `Strategic Roadmap Updated: ${response.overarchingStrategy}. New Split: ${response.splitType}. Reason: ${feedback || "Initial Generation"}` }
     ]);
 
     console.log(`[Node: Strategy] Roadmap rebuilt: ${response.splitType} | ${response.mesoPhases.length} phases.`);
 
-    // If this was a regeneration, we update the state with the new phases and currentPhase
     return { 
       finalPlan: {
         ...response,
         userId: state.userId,
         currentPhase: response.mesoPhases[0].name,
-        schedule: [] // Clear existing schedule as it's now stale
+        schedule: [] 
       }
     };
   } catch (error) {
@@ -99,24 +101,24 @@ export async function generateMicrocycle(state: typeof WorkoutState.State) {
     const userId = state.userId;
     const feedback = state.feedback;
     
-    // Use the new strategy if it was just generated, otherwise use existing
     const currentPlan = state.finalPlan;
     if (!currentPlan) throw new Error("No training context found for microcycle generation.");
 
     console.log(`[Node: Microcycle] Generating schedule for Phase: ${currentPlan.currentPhase}...`);
 
     const currentMeso = currentPlan.mesoPhases.find((m: any) => m.name === currentPlan.currentPhase) || currentPlan.mesoPhases[0];
-
-    // 1. Retrieve performance context from LTM
     const historicalContext = await searchMemories(String(userId), "exercise performance, strength numbers, form issues")
       || "First microcycle for this phase.";
 
-    // 2. Generate schedule
-    const prompt = buildMicrocyclePrompt(p, currentMeso, historicalContext, feedback);
-    const structuredModel = model.withStructuredOutput(MicrocycleGeneratorSchema, { name: "weekly_microcycle" });
-    const response = await structuredModel.invoke(prompt);
+    const microcyclePrompt = buildMicrocyclePrompt(p, currentMeso, historicalContext, feedback);
+    
+    // HARDENING: Multi-layer instruction to suppress conversational output
+    const finalPrompt = `STRICT DATA MODE: GENERATE 7-DAY SCHEDULE. Output ONLY the tool call. No preamble. No conversational text.
+    ${microcyclePrompt}`;
 
-    // 3. Ensure 7 days and correct structure (Validation Logic)
+    const structuredModel = model.withStructuredOutput(MicrocycleGeneratorSchema, { name: "weekly_microcycle" });
+    const response = await structuredModel.invoke(finalPrompt);
+
     if (Array.isArray(response.schedule) && response.schedule.length < 7) {
       const existingDays = response.schedule.map((d: any) => d.day);
       for (let i = 1; i <= 7; i++) {
@@ -136,14 +138,12 @@ export async function generateMicrocycle(state: typeof WorkoutState.State) {
       });
     }
 
-    // 4. Sync Microcycle to LTM
     addInteraction(String(userId), [
       { role: "assistant", content: `Programmed Microcycle for ${currentMeso.name}: ${response.schedule.map((d:any) => d.focus).join(", ")}.` }
     ]);
 
     console.log(`[Node: Microcycle] Schedule complete. User: ${userId}`);
 
-    // 5. Merge new microcycle into the final plan
     return { 
       finalPlan: {
         ...currentPlan,

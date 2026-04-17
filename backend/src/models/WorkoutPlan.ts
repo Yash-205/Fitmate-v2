@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 // ─────────────────────────────────────────────────────────
-// INTERFACES — Mirror Zod schemas from workoutAgent.ts exactly
+// INTERFACES — Mirror AI Generator Zod schemas exactly.
+// These are the "Source of Truth" for the entire application.
 // ─────────────────────────────────────────────────────────
 
 export interface IExercise {
