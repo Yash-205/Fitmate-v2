@@ -12,7 +12,7 @@ export const getModel = (temperature = 0.1) => {
     apiKey: process.env.GROQ_API_KEY,
     model: "llama-3.1-8b-instant",
     temperature: temperature,
-    maxTokens: 2500, // Hard limit to stay under 6,000 TPM (Prompt + Output)
+    maxTokens: 3500, // Increased to prevent truncation of long 7-day plans
   });
 };
 
