@@ -60,7 +60,9 @@ const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-800 flex justify-center items-center">
           <p className="text-slate-500 text-xs font-medium text-center">
-            © 2026 FitMate. All rights reserved. | Privacy Policy | Terms of Service
+            © 2026 FitMate. All rights reserved. | 
+            <Link to="/privacy" className="hover:text-orange-500 transition-colors mx-1">Privacy Policy</Link> | 
+            <Link to="/terms" className="hover:text-orange-500 transition-colors mx-1">Terms of Service</Link>
           </p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { X } from 'lucide-react';
 
@@ -16,6 +16,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
   const [authData, setAuthData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setView(initialView);
+      setError('');
+      setAuthData({ name: '', email: '', password: '' });
+    }
+  }, [isOpen, initialView]);
 
   if (!isOpen) return null;
 
@@ -40,6 +48,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div 
         className="bg-white w-full max-w-[440px] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-500 relative"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
@@ -51,9 +62,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
 
         <div className="p-10 space-y-8">
           <div className="space-y-2">
-            <h3 className="text-2xl font-black text-slate-900">
-              {view === 'login' ? 'Welcome Back' : 'Create Account'}
-            </h3>
+            <h2 id="auth-modal-title" className="text-2xl font-black text-slate-900">
+              {view === 'login' ? 'Log In' : 'Create Account'}
+            </h2>
             <p className="text-sm text-slate-500 font-medium leading-relaxed">
               {view === 'login' 
                 ? 'Log in to your FitCoach Pro account to continue your fitness journey.' 
@@ -111,6 +122,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
             <button 
               onClick={() => setView(view === 'login' ? 'signup' : 'login')}
               className="ml-1 text-orange-600 font-bold hover:underline"
+              data-testid="auth-view-toggle"
             >
               {view === 'login' ? 'Sign up' : 'Log in'}
             </button>

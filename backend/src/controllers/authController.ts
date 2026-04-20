@@ -9,6 +9,10 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -26,7 +30,7 @@ export const signup = async (req: Request, res: Response) => {
       token: generateToken(user._id.toString()),
     });
   } catch (error) {
-    console.log(error);
+    console.error("[Signup Error]", error);
     res.status(500).json({ message: "Signup failed" });
   }
 };
@@ -35,10 +39,21 @@ export const signup = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    console.log("[Login Request]", { email, passwordLength: password?.length });
+
+    if (!email || !password) {
+      console.log("[Login Failed] Missing email or password");
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
     const user = await User.findOne({ email });
-    if (!user || user.provider !== "local") {
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      console.log("[Login Failed] User not found:", email);
+      return res.status(400).json({ message: "Invalid credentials: User not found" });
+    }
+    if (user.provider !== "local") {
+      console.log("[Login Failed] Wrong provider:", user.provider);
+      return res.status(400).json({ message: "Invalid credentials: Wrong auth provider" });
     }
 
     const isMatch = await bcrypt.compare(
@@ -47,7 +62,8 @@ export const login = async (req: Request, res: Response) => {
     );
 
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      console.log("[Login Failed] Password mismatch for:", email);
+      return res.status(400).json({ message: "Invalid credentials: Password incorrect" });
     }
 
     const profile = await Profile.findOne({ userId: user._id });
@@ -57,7 +73,7 @@ export const login = async (req: Request, res: Response) => {
       hasProfile: !!profile,
     });
   } catch (error) {
-    console.log(error);
+    console.error("[Login Error]", error);
     res.status(500).json({ message: "Login failed" });
   }
 };

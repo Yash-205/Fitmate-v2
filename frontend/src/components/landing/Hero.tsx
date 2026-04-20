@@ -19,11 +19,11 @@ export const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-[950] tracking-tight leading-[1.05] text-slate-900">
-              Your Personal Fitness Journey Starts Here
+              Elevate Your Fitness Journey
             </h1>
             
             <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-xl">
-              Get personalized coaching, custom workout plans, and expert guidance tailored to your unique goals. Transform your life with our proven methodology.
+              Experience the future of health with AI-Powered Personal Training. Get custom workout plans and expert guidance tailored to your unique goals.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 text-slate-900">
@@ -31,7 +31,7 @@ export const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
                 onClick={onGetStarted}
                 className="h-14 px-8 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-base shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center gap-3"
               >
-                Start Free Trial <ArrowRight size={18} />
+                Get Started <ArrowRight size={18} />
               </Button>
               <Button 
                 variant="outline"

@@ -7,7 +7,8 @@ export const getMongoClient = () => {
   
   // Reuse a global client instance or create a new one
   if (!(global as any)._mongoClient) {
-    (global as any)._mongoClient = new MongoClient(mongoUri);
+    const dbName = process.env.NODE_ENV === "test" ? "fitmate-test" : undefined;
+    (global as any)._mongoClient = new MongoClient(mongoUri, { dbName } as any);
   }
   return (global as any)._mongoClient as MongoClient;
 };

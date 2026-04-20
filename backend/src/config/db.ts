@@ -8,12 +8,12 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 // Function to establish connection with MongoDB
 const connectDB = async () => {
   try {
-    // mongoose.connect() returns a connection object
+    const mongoUri = process.env.MONGO_URI as string;
+    const dbName = process.env.NODE_ENV === "test" ? "fitmate-test" : undefined;
 
-    const conn = await mongoose.connect(process.env.MONGO_URI as string);
+    const conn = await mongoose.connect(mongoUri, { dbName });
 
-    // If connection is successful, log the host (cluster URL)
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected: ${conn.connection.host}${dbName ? ` (Database: ${dbName})` : ""}`);
   } catch (error: any) {
     console.error("MongoDB connection failed");
     console.error(error.message);

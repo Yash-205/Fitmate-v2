@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes";
 import profileRoutes from "./routes/profileRoutes"; 
 import chatRoutes from "./routes/chatRoutes";
 import workoutRoutes from "./routes/workoutRoutes";
+import testRoutes from "./routes/testRoutes";
 
 // connect database
 connectDB();
@@ -16,6 +17,10 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+if (process.env.NODE_ENV === "test") {
+  app.use("/api/test", testRoutes);
+}
 
 app.use("/api/chat", chatRoutes);
 app.use("/api/auth", authRoutes);
