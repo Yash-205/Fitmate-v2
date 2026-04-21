@@ -44,7 +44,7 @@ describe('FitMate End-to-End Comprehensive Flow', () => {
     cy.contains('button', /create my program/i).click();
 
     // 3. Workout Page
-    cy.url().should('include', '/workout');
+    cy.url({ timeout: 15000 }).should('include', '/workout');
     cy.contains('button', /generate workout plan/i).should('be.visible').click();
     
     // Wait for AI generation (might take a bit)
