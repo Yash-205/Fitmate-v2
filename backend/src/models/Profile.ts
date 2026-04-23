@@ -31,6 +31,9 @@ export interface IProfile extends Document {
 
   // Nutrition baseline
   diet: string;                // Vegetarian / Vegan / Standard / etc.
+
+  // Assignment
+  trainerId?: mongoose.Types.ObjectId;
 }
 
 const ProfileSchema: Schema = new Schema({
@@ -63,6 +66,12 @@ const ProfileSchema: Schema = new Schema({
 
   // Nutrition
   diet: String,
+
+  // Assignment
+  trainerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Trainer",
+  },
 });
 
 export default mongoose.model<IProfile>("Profile", ProfileSchema);

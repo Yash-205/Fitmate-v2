@@ -8,6 +8,7 @@ import profileRoutes from "./routes/profileRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import workoutRoutes from "./routes/workoutRoutes";
 import testRoutes from "./routes/testRoutes";
+import trainerRoutes from "./routes/trainerRoutes";
 
 // connect database
 connectDB();
@@ -26,6 +27,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/workout", workoutRoutes);
+app.use("/api/trainer", trainerRoutes);
 
 // Test route
 app.get("/", (req, res) => {
@@ -36,6 +38,17 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 8000;
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+});
+
+// 🛡️ Global "Safety Net" - Prevents the server from crashing during DB resets/fast tests
+process.on("unhandledRejection", (err: any) => {
+    console.error("Unhandled Rejection:", err.message);
+    // We don't exit the process here to keep the test server running
+});
+
+process.on("uncaughtException", (err: any) => {
+    console.error("Uncaught Exception:", err.message);
+    // Optional: Graceful shutdown if needed, but for testing we keep it alive
 });

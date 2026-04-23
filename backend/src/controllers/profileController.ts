@@ -134,3 +134,29 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Failed to fetch profile" });
   }
 };
+
+// 🔹 Select Trainer
+export const selectTrainer = async (req: AuthRequest, res: Response) => {
+  try {
+    const { trainerId } = req.params;
+    const userId = req.userId;
+
+    if (!trainerId) {
+      return res.status(400).json({ message: "Trainer ID is required" });
+    }
+
+    const profile = await Profile.findOneAndUpdate(
+      { userId },
+      { trainerId },
+      { new: true }
+    );
+
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    res.json({ message: "Successfully connected to trainer", profile });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to connect to trainer" });
+  }
+};

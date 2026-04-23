@@ -3,11 +3,12 @@ import bcrypt from "bcrypt";
 import User from "../models/User";
 import generateToken from "../utils/generateToken";
 import Profile from "../models/Profile";
+import Trainer from "../models/Trainer";
 
 // 🔹 Signup (local)
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
@@ -24,10 +25,12 @@ export const signup = async (req: Request, res: Response) => {
       email,
       password: hashedPassword,
       provider: "local",
+      role: role || "learner",
     });
 
     res.status(201).json({
       token: generateToken(user._id.toString()),
+      role: user.role,
     });
   } catch (error) {
     console.error("[Signup Error]", error);
@@ -67,10 +70,13 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const profile = await Profile.findOne({ userId: user._id });
+    const trainerProfile = await Trainer.findOne({ userId: user._id });
 
     res.json({
       token: generateToken(user._id.toString()),
+      role: user.role,
       hasProfile: !!profile,
+      hasTrainerProfile: !!trainerProfile,
     });
   } catch (error) {
     console.error("[Login Error]", error);
@@ -94,10 +100,13 @@ export const googleAuth = async (req: Request, res: Response) => {
     }
 
     const profile = await Profile.findOne({ userId: user._id });
+    const trainerProfile = await Trainer.findOne({ userId: user._id });
 
     res.json({
       token: generateToken(user._id.toString()),
+      role: user.role,
       hasProfile: !!profile,
+      hasTrainerProfile: !!trainerProfile,
     });
   } catch (error) {
     res.status(500).json({ message: "Google auth failed" });

@@ -19,7 +19,7 @@ router.post('/reset', async (req, res) => {
     }
 
     // 2. Clear Mem0 for the test user if provided
-    const testUserId = req.body.userId;
+    const testUserId = req.body?.userId;
     if (testUserId) {
       const mem0 = getMem0Client();
       try {

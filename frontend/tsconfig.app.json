@@ -1,21 +1,29 @@
 {
+  /* 
+    APPLICATION CONFIGURATION
+    This configures how your frontend source code (the code that runs in the browser) 
+    is handled by TypeScript.
+  */
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // browser-specific libraries
     "module": "esnext",
-    "types": ["vite/client"],
+    "types": ["vite/client"], // types for Vite-specific features like import.meta
     "skipLibCheck": true,
 
-    /* Bundler mode */
+    /* Bundler mode - Optimized for modern bundlers like Vite */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
+    "noEmit": true, // Vite handles the actual build/emit
+    "jsx": "react-jsx", // Support for React 17+ JSX transform
+    
+    /* Strict Type Checking & Linting */
     "strict": true,
-    "forceConsistentCasingInFileNames": true,    "noUnusedLocals": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
@@ -23,5 +31,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"] // Only look at files in the src directory
 }

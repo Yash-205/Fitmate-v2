@@ -1,13 +1,17 @@
 {
+  /* 
+    SOLUTION CONFIGURATION
+    This file orchestrates the TypeScript project by linking sub-projects.
+    It doesn't compile files itself but provides a single entry point for IDEs.
+  */
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "files": [],
+  "files": [], // No files in the root, logic is delegated to references below
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./tsconfig.app.json" }, // Main frontend application logic
+    { "path": "./tsconfig.node.json" } // Build-time configuration (Vite, etc.)
   ]
 }

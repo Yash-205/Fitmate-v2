@@ -120,6 +120,9 @@ export const AuthService = {
     localStorage.setItem('token', data.token);
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('userEmail', credentials.email);
+    localStorage.setItem('userRole', data.role);
+    localStorage.setItem('hasProfile', data.hasProfile ? 'true' : 'false');
+    localStorage.setItem('hasTrainerProfile', data.hasTrainerProfile ? 'true' : 'false');
     return data;
   },
   signup: async (userData: { email: string; password: string; name?: string }) => {
@@ -130,13 +133,28 @@ export const AuthService = {
     localStorage.setItem('token', data.token);
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('userEmail', userData.email);
+    localStorage.setItem('userRole', data.role);
     return data;
   },
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('hasProfile');
+    localStorage.removeItem('hasTrainerProfile');
   }
+};
+
+export const TrainerService = {
+  getProfile: () => fetchClient('/trainer/profile'),
+  upsertProfile: (trainerData: Record<string, any>) =>
+    fetchClient('/trainer/profile', {
+      method: 'POST',
+      body: JSON.stringify(trainerData),
+    }),
+  getClients: () => fetchClient('/trainer/clients'),
+  getDiscovery: () => fetchClient('/trainer/discovery'),
 };
 
 export const ProfileService = {
@@ -145,5 +163,9 @@ export const ProfileService = {
     fetchClient('/profile', {
       method: 'POST',
       body: JSON.stringify(profileData),
+    }),
+  selectTrainer: (trainerId: string) =>
+    fetchClient(`/profile/select-trainer/${trainerId}`, {
+      method: 'POST',
     }),
 };

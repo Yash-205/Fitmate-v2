@@ -1,6 +1,7 @@
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/express";
+import User from "../models/User";
 
 const authMiddleware = (
   req: AuthRequest,
@@ -30,6 +31,25 @@ const authMiddleware = (
   } catch (error) {
     return res.status(401).json({ message: "Invalid token" });
   }
+};
+
+export const isRole = (roles: string[]) => {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await User.findById(req.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!roles.includes(user.role)) {
+        return res.status(403).json({ message: "Access denied: Unauthorized role" });
+      }
+
+      next();
+    } catch (error) {
+      res.status(500).json({ message: "Role verification failed" });
+    }
+  };
 };
 
 export default authMiddleware;

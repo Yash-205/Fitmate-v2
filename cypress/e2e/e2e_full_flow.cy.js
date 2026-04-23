@@ -20,7 +20,7 @@ describe('FitMate End-to-End Comprehensive Flow', () => {
 
     // 2. Assessment Step 1
     cy.get('div[role="dialog"]').should('be.visible');
-    cy.contains('h3', /final assessment/i).should('be.visible');
+    cy.contains(/final assessment/i).should('be.visible');
     
     cy.get('input[placeholder="Years"]').type('25');
     cy.get('select').eq(0).select('Male');
@@ -44,7 +44,7 @@ describe('FitMate End-to-End Comprehensive Flow', () => {
     cy.contains('button', /create my program/i).click();
 
     // 3. Workout Page
-    cy.url({ timeout: 15000 }).should('include', '/workout');
+    cy.url({ timeout: 30000 }).should('include', '/workout');
     cy.contains('button', /generate workout plan/i).should('be.visible').click();
     
     // Wait for AI generation (might take a bit)

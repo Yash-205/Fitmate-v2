@@ -12,6 +12,8 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [displayName, setDisplayName] = useState('User');
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [activePersona, setActivePersona] = useState<'learner' | 'trainer'>('learner');
 
   useEffect(() => {
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -20,15 +22,26 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick }) => {
     if (loggedIn) {
       const email = localStorage.getItem('userEmail') || '';
       const username = email.split('@')[0] || 'User';
+      const role = localStorage.getItem('userRole');
+      setUserRole(role);
+      
+      const persona = localStorage.getItem('activePersona') as 'learner' | 'trainer' || 'learner';
+      setActivePersona(persona);
+
       // Capitalize first letter for premium feel
       setDisplayName(username.charAt(0).toUpperCase() + username.slice(1));
     }
   }, [location.pathname]);
 
+
+
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('hasProfile');
+    localStorage.removeItem('hasTrainerProfile');
     setIsLoggedIn(false);
     navigate('/');
   };
@@ -46,16 +59,69 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick }) => {
         <div className="flex items-center gap-8">
           <div className="hidden lg:flex items-center gap-8">
             <NavLink to="/">Home</NavLink>
-            <NavLink to="/workout">Workout Plan</NavLink>
+            {activePersona === 'trainer' ? (
+              <NavLink to="/trainer/dashboard">Dashboard</NavLink>
+            ) : (
+              <NavLink 
+                to={isLoggedIn ? "/workout" : "#"} 
+                onClick={(e) => {
+                  if (!isLoggedIn) {
+                    e.preventDefault();
+                    onLoginClick();
+                  }
+                }}
+              >
+                Workout Plan
+              </NavLink>
+            )}
             <NavLink to="/trainers">Trainers</NavLink>
-            <NavLink to="/gyms">Gyms</NavLink>
-            <NavLink to="/chat">AI Coach</NavLink>
+            {activePersona === 'learner' && (
+              <NavLink 
+                to={isLoggedIn ? "/chat" : "#"}
+                onClick={(e) => {
+                  if (!isLoggedIn) {
+                    e.preventDefault();
+                    onLoginClick();
+                  }
+                }}
+              >
+                AI Coach
+              </NavLink>
+            )}
           </div>
 
           <div className="h-6 w-px bg-slate-200 hidden lg:block" />
 
           {isLoggedIn ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              {/* 
+                ROLE SWITCHER DROPDOWN
+                Only visible if the user is a trainer. Allows toggling between 'Coach' and 'Athlete' personas.
+                Uses window.location.href for a hard refresh to ensure all global states and route guards 
+                are properly re-evaluated after a persona switch.
+              */}
+              {(userRole === 'trainer' || activePersona === 'trainer' || localStorage.getItem('hasTrainerProfile') === 'true') && (
+                <div className="relative flex items-center group">
+                  <select 
+                    value={activePersona}
+                    onChange={(e) => {
+                      const newPersona = e.target.value as 'learner' | 'trainer';
+                      setActivePersona(newPersona);
+                      localStorage.setItem('activePersona', newPersona);
+                      // Force a full reload to reset persona-specific UI across the app
+                      window.location.href = newPersona === 'trainer' ? '/trainer/dashboard' : '/workout';
+                    }}
+                    className="pl-4 pr-10 py-2 bg-orange-50 border border-orange-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-orange-600 appearance-none cursor-pointer hover:bg-orange-100 transition-all shadow-sm focus:outline-none"
+                  >
+                    <option value="learner">Athlete Mode</option>
+                    <option value="trainer">Coach Mode</option>
+                  </select>
+                  <div className="absolute right-3 text-orange-400 pointer-events-none group-hover:text-orange-600 transition-colors">
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                </div>
+              )}
+
               <Link to="/profile" className="flex items-center gap-2.5 py-2 px-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-slate-700 hover:bg-white hover:border-orange-200 transition-all shadow-sm">
                 <div className="w-6 h-6 rounded-lg bg-white shadow-sm flex items-center justify-center text-orange-500">
                   <FaUser size={10} />
@@ -92,8 +158,12 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick }) => {
   );
 };
 
-const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
-  <Link to={to} className="text-sm font-bold text-slate-500 hover:text-orange-600 transition-colors">
+const NavLink = ({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: (e: React.MouseEvent) => void }) => (
+  <Link 
+    to={to} 
+    onClick={onClick}
+    className="text-sm font-bold text-slate-500 hover:text-orange-600 transition-colors"
+  >
     {children}
   </Link>
 );
