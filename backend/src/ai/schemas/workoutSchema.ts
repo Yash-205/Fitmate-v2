@@ -13,9 +13,9 @@ export const DayPlanSchema = z.object({
   focus: z.string().describe("Training focus (e.g. 'Upper Body')"),
   isRestDay: z.boolean().describe("true if recovery day"),
   dailyObjective: z.string().optional().describe("Today's main goal"),
-  warmup: z.array(ExerciseSchema).optional().describe("Preparation movements"),
+  warmup: z.array(z.string()).optional().describe("Preparation movements (e.g. '3x10 Jumping Jacks')"),
   exercises: z.array(ExerciseSchema).describe("Main training exercises"),
-  cooldown: z.array(ExerciseSchema).optional().describe("Mobility work"),
+  cooldown: z.array(z.string()).optional().describe("Mobility work (e.g. '2 min Hamstring Stretch')"),
 });
 
 export const MesoPhaseSchema = z.object({
@@ -36,8 +36,8 @@ export const StrategyGeneratorSchema = z.object({
 
 export const MicrocycleGeneratorSchema = z.object({
   currentPhase: z.string().describe("Active phase name"),
-  schedule: z.array(DayPlanSchema).length(7).describe("Exactly 7-day schedule"),
   progressionRule: z.string().describe("Week-over-week progress rule"),
   deloadStrategy: z.string().describe("Recovery strategy"),
+  schedule: z.array(DayPlanSchema).length(7).describe("Exactly 7-day schedule"),
 });
 

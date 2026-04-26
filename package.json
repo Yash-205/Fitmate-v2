@@ -6,7 +6,8 @@
     "backend:test": "npm run dev:test --prefix backend",
     "frontend": "npm run dev --prefix frontend",
     "test:open": "cypress open",
-    "test:run": "cypress run"
+    "test:run": "cypress run",
+    "seed": "npm run seed --prefix backend"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

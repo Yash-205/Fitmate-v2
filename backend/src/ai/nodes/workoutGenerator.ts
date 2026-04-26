@@ -129,6 +129,8 @@ export async function generateMicrocycle(state: typeof WorkoutState.State) {
             focus: "Rest & Recovery",
             isRestDay: true,
             exercises: [],
+            warmup: [],
+            cooldown: []
           });
         }
       }

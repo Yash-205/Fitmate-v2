@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Moon, Info, Zap, Dumbbell } from 'lucide-react';
+import { Moon, Info, Dumbbell } from 'lucide-react';
 import type { DayPlan } from '@/types/workout';
 
 interface DayPlanCardProps {
@@ -76,13 +76,13 @@ export const DayPlanCard = ({ day }: DayPlanCardProps) => {
             {day.warmup && day.warmup.length > 0 && (
               <div className="bg-slate-50/40 border-b border-slate-100/50 p-2 px-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Zap size={10} className="text-orange-500 fill-orange-500" />
+                  <Dumbbell size={10} className="text-orange-500" />
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Preparation</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {day.warmup.map((ex, eIdx) => (
                     <span key={`warm-${eIdx}`} className="text-[10px] bg-white border border-slate-100 px-2 py-0.5 rounded text-slate-600">
-                      {ex.name} <span className="text-slate-400 font-medium ml-1">{ex.sets}x{ex.reps}</span>
+                      {typeof ex === 'string' ? ex : `${ex.name} ${ex.sets}x${ex.reps}`}
                     </span>
                   ))}
                 </div>
@@ -130,7 +130,7 @@ export const DayPlanCard = ({ day }: DayPlanCardProps) => {
                 <div className="flex flex-wrap gap-1">
                   {day.cooldown.map((ex, eIdx) => (
                     <span key={`cool-${eIdx}`} className="text-[10px] bg-white border border-slate-100 px-2 py-0.5 rounded text-slate-600">
-                      {ex.name}
+                      {typeof ex === 'string' ? ex : ex.name}
                     </span>
                   ))}
                 </div>

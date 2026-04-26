@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
-  Zap, 
+  Dumbbell, 
   Brain, 
   Clock, 
   Users, 
@@ -30,7 +30,7 @@ export const AiCoachShowcase: React.FC = () => {
 
             <div className="space-y-6">
               <CoachHighlight 
-                icon={<Zap size={20} className="text-orange-600" />}
+                icon={<Dumbbell size={20} className="text-orange-600" />}
                 title="Instant Answers"
                 description="Get immediate responses to your fitness questions, 24/7."
               />

@@ -27,7 +27,8 @@ ${historicalContext}
 </Input Context>
 
 <Constraints>
-- Schedule MUST be exactly 7 days.
+- Schedule MUST be exactly 7 days (Day 1 through Day 7). 
+- DO NOT generate Day 8 or beyond. Stop immediately after Day 7.
 - Rest days must have 'isRestDay': true, empty exercises [], and NO warmup/cooldown.
 - Avoid exercises aggravating limitations: ${p.injuries || 'None'}.
 - Do not use emojis in any of the output fields (focus, dailyObjective, notes, etc.).

@@ -16,9 +16,9 @@ export interface DayPlan {
   focus: string;
   isRestDay: boolean;
   dailyObjective?: string;
-  warmup?: Exercise[];
+  warmup?: (string | Exercise)[];
   exercises: Exercise[];
-  cooldown?: Exercise[];
+  cooldown?: (string | Exercise)[];
 }
 
 export interface MesoPhase {

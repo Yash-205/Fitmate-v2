@@ -22,9 +22,9 @@ export interface IDayPlan {
   focus: string;
   isRestDay: boolean;
   dailyObjective?: string;
-  warmup?: IExercise[];
+  warmup?: string[];
   exercises: IExercise[];
-  cooldown?: IExercise[];
+  cooldown?: string[];
 }
 
 export interface IMesoPhase {
@@ -84,16 +84,7 @@ const WorkoutPlanSchema: Schema = new Schema({
       focus: { type: String },
       isRestDay: { type: Boolean },
       dailyObjective: { type: String },
-      warmup: [
-        {
-          _id: false,
-          name: { type: String },
-          sets: { type: Number },
-          reps: { type: String },
-          intensity: { type: String },
-          notes: { type: String },
-        },
-      ],
+      warmup: [{ type: String }],
       exercises: [
         {
           _id: false,
@@ -104,16 +95,7 @@ const WorkoutPlanSchema: Schema = new Schema({
           notes: { type: String },
         },
       ],
-      cooldown: [
-        {
-          _id: false,
-          name: { type: String },
-          sets: { type: Number },
-          reps: { type: String },
-          intensity: { type: String },
-          notes: { type: String },
-        },
-      ],
+      cooldown: [{ type: String }],
     },
   ],
   progressionRule: { type: String },
