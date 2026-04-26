@@ -5,6 +5,17 @@ import Profile from "../models/Profile";
 import ChatSession from "../models/ChatSession";
 import { streamAgent, getAgentHistory } from "../ai/graphs/chatGraph";
 
+/**
+ * Chat Controller
+ * 
+ * Manages AI-powered chat sessions, including streaming responses and session history.
+ */
+
+/**
+ * @desc    Stream chat response from AI agent
+ * @route   POST /api/chat
+ * @access  Private
+ */
 export const chat = async (req: AuthRequest, res: Response) => {
   try {
     const { message, threadId: providedThreadId } = req.body;
@@ -56,6 +67,11 @@ export const chat = async (req: AuthRequest, res: Response) => {
   }
 };
 
+/**
+ * @desc    Get all chat sessions for the authenticated user
+ * @route   GET /api/chat/sessions
+ * @access  Private
+ */
 export const getSessions = async (req: AuthRequest, res: Response) => {
   try {
     const sessions = await ChatSession.find({ userId: req.userId }).sort({ updatedAt: -1 });
@@ -65,6 +81,11 @@ export const getSessions = async (req: AuthRequest, res: Response) => {
   }
 };
 
+/**
+ * @desc    Get message history for a specific thread
+ * @route   GET /api/chat/history/:threadId
+ * @access  Private
+ */
 export const getHistory = async (req: AuthRequest, res: Response) => {
   try {
     const { threadId } = req.params;

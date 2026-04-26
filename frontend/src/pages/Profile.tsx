@@ -10,6 +10,13 @@ import { AthleteProfileCard } from '@/components/profile/AthleteProfileCard';
 import { PhaseAccordion } from '@/components/profile/PhaseAccordion';
 import { StrategySection } from '@/components/profile/StrategySection';
 
+/**
+ * Profile Page
+ * 
+ * Displays the long-term periodization blueprint and athlete assessment results.
+ * It provides a high-level overview of the training strategy and allows users
+ * to switch between Athlete and Coach personas if they are verified trainers.
+ */
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);

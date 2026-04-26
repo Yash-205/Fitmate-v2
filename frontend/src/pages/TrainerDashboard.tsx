@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { TrainerService } from '@/services/api';
 
+/**
+ * Trainer Dashboard
+ * 
+ * Provides a specialized interface for professional trainers.
+ * Allows coaches to:
+ * - View and manage their professional profile details.
+ * - Track their total client count.
+ * - Monitor the progress and baseline metrics of their assigned athletes/learners.
+ */
 export default function TrainerDashboard() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

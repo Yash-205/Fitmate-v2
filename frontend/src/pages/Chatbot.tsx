@@ -18,6 +18,15 @@ interface Session {
   updatedAt: string;
 }
 
+/**
+ * AI Chatbot Page
+ * 
+ * Provides an interactive interface for users to consult with the AI Coach.
+ * It manages:
+ * - Real-time streaming of AI responses via SSE (Server-Sent Events).
+ * - Persistent chat sessions and message history retrieval.
+ * - Dynamic UI updates for message lists and sidebars.
+ */
 const Chatbot: React.FC = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);

@@ -3,6 +3,15 @@ import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/express";
 import User from "../models/User";
 
+/**
+ * Auth Middleware
+ * 
+ * Provides security by verifying JWT tokens and enforcing role-based access control (RBAC).
+ */
+
+/**
+ * @desc    Verifies JWT token and attaches userId to the request object
+ */
 const authMiddleware = (
   req: AuthRequest,
   res: Response,
@@ -33,6 +42,11 @@ const authMiddleware = (
   }
 };
 
+
+/**
+ * @desc    Enforces role-based access (e.g., only 'trainer' or 'admin' can access certain routes)
+ * @param   roles Array of allowed roles
+ */
 export const isRole = (roles: string[]) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

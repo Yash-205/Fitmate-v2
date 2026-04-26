@@ -10,6 +10,13 @@ import workoutRoutes from "./routes/workoutRoutes";
 import testRoutes from "./routes/testRoutes";
 import trainerRoutes from "./routes/trainerRoutes";
 
+/**
+ * FitMate Backend Server
+ * 
+ * Entry point for the Express application. 
+ * Initializes middleware, routes, and database connections.
+ */
+
 // connect database
 connectDB();
 

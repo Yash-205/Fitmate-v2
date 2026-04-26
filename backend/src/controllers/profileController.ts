@@ -5,7 +5,18 @@ import { getMem0Client } from "../ai/memory/mem0Service";
 import { runStrategyAgent } from "../ai/graphs/strategyGraph";
 import WorkoutPlan from "../models/WorkoutPlan";
 
-// 🔹 Create or Update Profile
+/**
+ * Profile Controller
+ * 
+ * Manages user physical profiles, baseline assessments, and trainer connections.
+ * It also triggers AI-driven strategy generation when a profile is created or updated.
+ */
+
+/**
+ * @desc    Create or update user profile and trigger AI strategy generation
+ * @route   POST /api/profile
+ * @access  Private
+ */
 export const upsertProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
@@ -118,7 +129,11 @@ Lifestyle/Readiness: Sleep (${sleepQuality}), Stress (${stressLevel}), Diet (${d
   }
 };
 
-// 🔹 Get Profile
+/**
+ * @desc    Get the authenticated user's profile
+ * @route   GET /api/profile
+ * @access  Private
+ */
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
@@ -135,7 +150,11 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 🔹 Select Trainer
+/**
+ * @desc    Connect a user to a specific trainer
+ * @route   POST /api/profile/select-trainer/:trainerId
+ * @access  Private
+ */
 export const selectTrainer = async (req: AuthRequest, res: Response) => {
   try {
     const { trainerId } = req.params;

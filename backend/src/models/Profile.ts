@@ -1,9 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-// ─────────────────────────────────────────────────────────
-// Profile — Client Assessment Data (Coach's intake form)
-// Based on: Assessment Phase from professional trainer workflow
-// ─────────────────────────────────────────────────────────
+/**
+ * Profile Model
+ * 
+ * Stores the physical baseline, goals, and lifestyle constraints of a learner.
+ * This data serves as the primary context for the AI Strategy and Evolution agents.
+ */
 
 export interface IProfile extends Document {
   userId: mongoose.Types.ObjectId;

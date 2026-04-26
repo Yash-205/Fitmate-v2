@@ -2,6 +2,11 @@ import express from "express";
 import { chat, getSessions, getHistory } from "../controllers/chatController";
 import authMiddleware from "../middleware/authMiddleware";
 
+/**
+ * Chat Routes
+ * 
+ * Defines endpoints for AI-powered chat interactions and session history management.
+ */
 const router = express.Router();
 
 router.post("/", authMiddleware, chat);

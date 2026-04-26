@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+/**
+ * ChatSession Model
+ * 
+ * Tracks AI chat threads for users. 
+ * 'threadId' is the identifier used by the LangGraph/LangChain memory system.
+ */
+
 export interface IChatSession extends Document {
   userId: mongoose.Types.ObjectId;
   threadId: string;

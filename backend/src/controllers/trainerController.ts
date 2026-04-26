@@ -4,9 +4,18 @@ import Trainer from "../models/Trainer";
 import Profile from "../models/Profile";
 import User from "../models/User";
 
-// 🔹 Upsert Trainer Profile (Handles both first-time "promotion" and subsequent updates)
-// This is the core of our "Persona-based" architecture. A user starts as a learner,
-// and by calling this, they "activate" their Trainer persona.
+/**
+ * Trainer Controller
+ * 
+ * Manages trainer-specific logic, including professional profile management,
+ * client tracking, and trainer discovery.
+ */
+
+/**
+ * @desc    Create or update trainer profile and promote user role
+ * @route   POST /api/trainer/profile
+ * @access  Private
+ */
 export const upsertTrainerProfile = async (req: AuthRequest, res: Response) => {
   try {
     const { fullName, specialization, bio, certifications, experienceYears, hourlyRate, socialLinks } = req.body;
@@ -41,7 +50,11 @@ export const upsertTrainerProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 🔹 Get Own Trainer Profile
+/**
+ * @desc    Get the authenticated trainer's professional profile
+ * @route   GET /api/trainer/profile
+ * @access  Private
+ */
 export const getTrainerProfile = async (req: AuthRequest, res: Response) => {
   try {
     const trainer = await Trainer.findOne({ userId: req.userId });
@@ -54,7 +67,11 @@ export const getTrainerProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 🔹 Get Assigned Clients
+/**
+ * @desc    Get all clients assigned to the authenticated trainer
+ * @route   GET /api/trainer/clients
+ * @access  Private (Trainer only)
+ */
 export const getClients = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
@@ -77,7 +94,11 @@ export const getClients = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 🔹 Discovery: Get All Active Trainers
+/**
+ * @desc    Get all active trainers for discovery
+ * @route   GET /api/trainer/discovery
+ * @access  Private
+ */
 export const getDiscoveryList = async (req: AuthRequest, res: Response) => {
   try {
     const trainers = await Trainer.find({ isActive: true }).select("-userId -createdAt -updatedAt");

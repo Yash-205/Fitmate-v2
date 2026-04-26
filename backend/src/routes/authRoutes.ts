@@ -3,6 +3,11 @@ import { signup, login, googleAuth } from "../controllers/authController";
 import authMiddleware from "../middleware/authMiddleware";
 import { AuthRequest } from "../types/express";
 
+/**
+ * Authentication Routes
+ * 
+ * Defines endpoints for user registration, login, and Google OAuth.
+ */
 const router = express.Router();
 
 router.post("/signup", signup);

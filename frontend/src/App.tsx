@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/common/Footer';
@@ -11,94 +10,95 @@ import TrainerDashboard from './pages/TrainerDashboard';
 import { AuthModal } from './components/auth/AuthModal';
 import { ProfileSetupModal } from './components/profile-setup/ProfileSetupModal';
 import { TrainerSetupModal } from './components/profile-setup/TrainerSetupModal';
+import { useAppFlow } from './hooks/useAppFlow';
 
+/**
+ * Main Application Component
+ * 
+ * This file is now the "Map" of your app. It handles the URL routing and 
+ * displays the global modals (Auth, Profile, Trainer Setup) when the 
+ * "Brain" (useAppFlow hook) tells it to.
+ */
 function App() {
-  const [authModal, setAuthModal] = useState<{ isOpen: boolean; view: 'login' | 'signup' }>({ 
-    isOpen: false, 
-    view: 'login' 
-  });
-  const [isProfileSetupOpen, setIsProfileSetupOpen] = useState(false);
-  // State for the professional trainer onboarding flow
-  const [isTrainerSetupOpen, setIsTrainerSetupOpen] = useState(false);
-  const handleAuthSuccess = (hasProfile: boolean) => {
-    setAuthModal({ ...authModal, isOpen: false });
-    if (!hasProfile) {
-      // New users must always complete the base health assessment first
-      setIsProfileSetupOpen(true);
-    } else {
-      /**
-       * Multi-Persona Redirection Logic:
-       * 1. If user is a 'trainer' but is missing their Professional Coach Profile 
-       *    (certs, bio, specialization), force them into the Trainer Setup flow.
-       * 2. If they are a verified coach with a complete profile, send to Trainer Dashboard.
-       * 3. Otherwise, send to the Learner Workout Plan.
-       */
-      const role = localStorage.getItem('userRole');
-      const hasTrainerProfile = localStorage.getItem('hasTrainerProfile') === 'true';
-      
-      if (role === 'trainer' && !hasTrainerProfile) {
-        setIsTrainerSetupOpen(true);
-      } else {
-        // Set the default view mode for the user
-        const defaultPersona = role === 'trainer' ? 'trainer' : 'learner';
-        localStorage.setItem('activePersona', defaultPersona);
-        window.location.href = defaultPersona === 'trainer' ? '/trainer/dashboard' : '/workout';
-      }
-    }
-  };
+  // We extract all our state and logic from the useAppFlow custom hook.
+  // This keeps the App component clean and focused on layout/routing.
+  const { 
+    authModal, 
+    isProfileSetupOpen, 
+    isTrainerSetupOpen,
+    openLogin,
+    openSignup,
+    closeAuth,
+    openTrainerSetup,
+    closeTrainerSetup,
+    handleAuthSuccess,
+    handleSetupSuccess 
+  } = useAppFlow();
 
   return (
     <Router>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Navbar 
-          onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} 
-        />
+        {/* The Navigation Bar - Always visible */}
+        {/* We pass 'openLogin' so the Login button in the Navbar works */}
+        <Navbar onLoginClick={openLogin} onSignupClick={openSignup} />
+        
+        {/* The Main Content Area - Changes based on the URL (Route) */}
         <main style={{ flex: 1 }}>
           <Routes>
-            <Route path="/" element={<MainLanding onGetStarted={() => setAuthModal({ isOpen: true, view: 'signup' })} />} />
+            {/* Landing Page - Home */}
+            <Route path="/" element={<MainLanding onGetStarted={openSignup} />} />
+            
+            {/* Athlete's personal profile settings */}
             <Route path="/profile" element={<Profile />} />
+            
+            {/* AI Coaching Chat Interface */}
             <Route path="/chat" element={<Chatbot />} />
+            
+            {/* Personalized AI Workout Plan Dashboard */}
             <Route path="/workout" element={<Workout />} />
-            {/* Discovery page for all users to find coaches */}
+            
+            {/* Marketplace for finding and connecting with trainers */}
             <Route path="/trainers" element={
               <Trainers 
-                onBecomeCoachClick={() => setIsTrainerSetupOpen(true)} 
-                onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })}
+                onBecomeCoachClick={openTrainerSetup} 
+                onLoginClick={openLogin}
+                onSignupClick={openSignup}
               />
             } />
-            {/* Secure dashboard for coaches to manage their assigned learners */}
+            
+            {/* Management dashboard for Trainers (Coach Mode) */}
             <Route path="/trainer/dashboard" element={<TrainerDashboard />} />
+            
+            {/* Catch-all: Redirect unknown URLs back to the Landing page */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+
         <Footer />
       </div>
 
+      {/* --- GLOBAL MODALS --- */}
+      {/* These modals are controlled by the state inside the 'useAppFlow' hook */}
+
+      {/* 1. Authentication Modal: Handles Login and Signup */}
       <AuthModal 
         isOpen={authModal.isOpen} 
         initialView={authModal.view}
-        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
-        onSuccess={handleAuthSuccess}
+        onClose={closeAuth}
+        onSuccess={handleAuthSuccess} // When successful, the hook decides where to send the user
       />
 
+      {/* 2. Health Assessment Modal: Collected physical metrics for new users */}
       <ProfileSetupModal 
         isOpen={isProfileSetupOpen}
-        onSuccess={() => {
-          setIsProfileSetupOpen(false);
-          const role = localStorage.getItem('userRole');
-          // After health assessment, check if they need trainer setup
-          window.location.href = role === 'trainer' ? '/trainer/dashboard' : '/workout';
-        }}
+        onSuccess={() => handleSetupSuccess('profile')} // Closes modal and redirects to workout
       />
 
-      {/* Professional Trainer Persona Onboarding Modal */}
+      {/* 3. Professional Trainer Setup Modal: Collects bio/certs for coaches */}
       <TrainerSetupModal
         isOpen={isTrainerSetupOpen}
-        onClose={() => setIsTrainerSetupOpen(false)}
-        onSuccess={() => {
-          setIsTrainerSetupOpen(false);
-          window.location.href = '/trainer/dashboard';
-        }}
+        onClose={closeTrainerSetup}
+        onSuccess={() => handleSetupSuccess('trainer')} // Closes modal and redirects to dashboard
       />
     </Router>
   );

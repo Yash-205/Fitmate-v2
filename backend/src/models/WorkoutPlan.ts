@@ -1,9 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-// ─────────────────────────────────────────────────────────
-// INTERFACES — Mirror AI Generator Zod schemas exactly.
-// These are the "Source of Truth" for the entire application.
-// ─────────────────────────────────────────────────────────
+/**
+ * WorkoutPlan Model
+ * 
+ * The core data structure for the AI-generated fitness programs.
+ * It contains a Strategic Roadmap (mesoPhases) and a tactical Weekly Schedule (schedule).
+ * This schema mirrors the Zod validation schemas used in the AI generation nodes.
+ */
 
 export interface IExercise {
   name: string;

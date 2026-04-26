@@ -5,7 +5,28 @@ import generateToken from "../utils/generateToken";
 import Profile from "../models/Profile";
 import Trainer from "../models/Trainer";
 
-// 🔹 Signup (local)
+/**
+ * Authentication Controller
+ * 
+ * Handles user registration, login, and external authentication (Google).
+ * 
+ * --- THE PROVIDER FIELD ---
+ * What: The 'provider' field in the User model identifies the source of the authentication.
+ * Values: 'local' (email/password) or 'google' (Google OAuth).
+ * 
+ * Why: 
+ * 1. Security: It prevents "account takeover" via credential stuffing. For example, if a user 
+ *    signed up via Google, they don't have a password. Checking 'provider !== local' ensures 
+ *    that someone can't log in using just the email through the standard login form.
+ * 2. Logic Routing: Different providers may require different validation steps or store 
+ *    different identifiers (like googleId).
+ */
+
+/**
+ * @desc    Register a new user (Local)
+ * @route   POST /api/auth/signup
+ * @access  Public
+ */
 export const signup = async (req: Request, res: Response) => {
   try {
     const { email, password, role } = req.body;
@@ -38,11 +59,14 @@ export const signup = async (req: Request, res: Response) => {
   }
 };
 
-// 🔹 Login (local)
+/**
+ * @desc    Authenticate user & get token (Local)
+ * @route   POST /api/auth/login
+ * @access  Public
+ */
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    console.log("[Login Request]", { email, passwordLength: password?.length });
 
     if (!email || !password) {
       console.log("[Login Failed] Missing email or password");
@@ -84,7 +108,11 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// 🔹 Google Auth (future-ready)
+/**
+ * @desc    Google Authentication (Future-ready)
+ * @route   POST /api/auth/google
+ * @access  Public
+ */
 export const googleAuth = async (req: Request, res: Response) => {
   try {
     const { email, googleId } = req.body;

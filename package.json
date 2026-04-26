@@ -1,9 +1,15 @@
 {
   "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "dev:test": "concurrently \"npm run backend:test\" \"npm run frontend\"",
+    "backend": "npm run dev --prefix backend",
+    "backend:test": "npm run dev:test --prefix backend",
+    "frontend": "npm run dev --prefix frontend",
     "test:open": "cypress open",
     "test:run": "cypress run"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "cypress": "^14.5.4",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"

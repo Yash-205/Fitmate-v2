@@ -11,6 +11,13 @@ interface AuthModalProps {
   onSuccess: (hasProfile: boolean) => void;
 }
 
+/**
+ * Authentication Modal
+ * 
+ * Provides a unified interface for user login and registration.
+ * It manages form state, handles API communication via AuthService,
+ * and triggers onboarding flows upon successful authentication.
+ */
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'login', onSuccess }) => {
   const [view, setView] = useState<'login' | 'signup'>(initialView);
   const [authData, setAuthData] = useState({ name: '', email: '', password: '' });

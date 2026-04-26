@@ -7,6 +7,12 @@ import {
   getDiscoveryList,
 } from "../controllers/trainerController";
 
+/**
+ * Trainer Routes
+ * 
+ * Defines endpoints for trainer discovery, professional profile management,
+ * and client tracking.
+ */
 const router = express.Router();
 
 // 🔹 Public/Learner Routes

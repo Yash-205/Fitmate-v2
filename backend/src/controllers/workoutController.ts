@@ -6,7 +6,17 @@ import WorkoutPlan from "../models/WorkoutPlan";
 import Profile from "../models/Profile";
 
 /**
- * Fetch current user's workout plan
+ * Workout Controller
+ * 
+ * Manages the generation, retrieval, and evolution of personalized workout plans.
+ * Leverages AI agents for strategic roadmapping (StrategyAgent) and 
+ * iterative plan adjustment based on feedback (EvolutionAgent).
+ */
+
+/**
+ * @desc    Fetch current user's workout plan
+ * @route   GET /api/workout
+ * @access  Private
  */
 export const getWorkoutPlan = async (req: Request, res: Response) => {
   try {
@@ -25,7 +35,9 @@ export const getWorkoutPlan = async (req: Request, res: Response) => {
 };
 
 /**
- * Generate OR Evolve a workout plan (Interconnected Adjustment)
+ * @desc    Generate a new plan or evolve an existing one based on feedback
+ * @route   POST /api/workout
+ * @access  Private
  */
 export const generateWorkoutPlan = async (req: Request, res: Response) => {
   try {

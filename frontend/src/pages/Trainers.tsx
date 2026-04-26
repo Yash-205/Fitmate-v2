@@ -11,9 +11,10 @@ import { TrainerService, ProfileService } from '@/services/api';
 interface TrainersProps {
   onBecomeCoachClick: () => void;
   onLoginClick: () => void;
+  onSignupClick: () => void;
 }
 
-export default function Trainers({ onBecomeCoachClick, onLoginClick }: TrainersProps) {
+export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupClick }: TrainersProps) {
   const [trainers, setTrainers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -69,6 +70,16 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick }: TrainersP
       console.error("Connection failed", err);
     } finally {
       setConnectingId(null);
+    }
+  };
+
+  const handleBecomeCoach = () => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!isLoggedIn) {
+      // For someone wanting to BECOME a coach, Signup is a better default CTA
+      onSignupClick();
+    } else {
+      onBecomeCoachClick();
     }
   };
 
@@ -204,7 +215,7 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick }: TrainersP
               Join our elite community of trainers and help users around the world reach their peak potential.
             </p>
             <button 
-              onClick={onBecomeCoachClick}
+              onClick={handleBecomeCoach}
               className="px-10 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-orange-500 transition-all hover:scale-[1.05] active:scale-95 shadow-xl shadow-orange-600/20"
             >
               Start Coaching with FitMate

@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+/**
+ * Trainer Model
+ * 
+ * Stores professional details for users who have opted into the Trainer persona.
+ * Contains specialization, certifications, and business-related fields.
+ */
+
 export interface ITrainer extends Document {
   userId: mongoose.Types.ObjectId;
   fullName: string;

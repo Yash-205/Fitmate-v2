@@ -2,6 +2,11 @@ import express from "express";
 import { upsertProfile, getProfile, selectTrainer } from "../controllers/profileController";
 import authMiddleware from "../middleware/authMiddleware";
 
+/**
+ * Profile Routes
+ * 
+ * Defines endpoints for managing user profiles and trainer assignments.
+ */
 const router = express.Router();
 
 // 🔹 Create or update profile

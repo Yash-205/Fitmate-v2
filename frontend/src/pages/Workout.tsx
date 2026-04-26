@@ -11,6 +11,15 @@ import { StrategySection } from '@/components/profile/StrategySection';
 import { FeedbackModal } from '@/components/workout/FeedbackModal';
 import { Settings2 } from 'lucide-react';
 
+/**
+ * Workout Page
+ * 
+ * The main dashboard for learners to view and interact with their AI-generated workout plan.
+ * Provides features for:
+ * - Viewing current and future training phases (Mesocycles).
+ * - Exploring daily workout breakdowns (Microcycles).
+ * - Triggering plan evolution/adjustment based on user feedback.
+ */
 const Workout: React.FC = () => {
   const navigate = useNavigate();
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);

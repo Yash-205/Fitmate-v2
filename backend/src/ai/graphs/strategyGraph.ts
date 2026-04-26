@@ -3,6 +3,13 @@ import { WorkoutState } from "../state/workoutState";
 import { generateStrategy } from "../nodes/workoutGenerator";
 import { getMongoCheckpointer } from "../memory/checkpointer";
 
+/**
+ * Strategy Graph
+ * 
+ * Defines the LangGraph workflow for generating a long-term fitness roadmap (mesocycles).
+ * This is the first phase of the AI generation process.
+ */
+
 const strategyWorkflow = new StateGraph(WorkoutState)
   .addNode("strategy", generateStrategy)
   .addEdge(START, "strategy")
