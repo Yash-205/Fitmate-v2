@@ -45,9 +45,12 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
     setIsLoggedIn(loggedIn);
     
     if (loggedIn) {
-      // Extract the username from the email (e.g., "yash@gmail.com" -> "yash")
+      // Priority: 1. Real Name from localStorage, 2. Email-derived username, 3. 'User'
+      const storedName = localStorage.getItem('userName');
       const email = localStorage.getItem('userEmail') || '';
-      const username = email.split('@')[0] || 'User';
+      const emailUsername = email.split('@')[0];
+      
+      const finalName = storedName || emailUsername || 'User';
       
       // Grab the permanent role and current active mode
       const role = localStorage.getItem('userRole');
@@ -57,7 +60,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
       setActivePersona(persona);
 
       // Capitalize first letter for a premium, professional feel
-      setDisplayName(username.charAt(0).toUpperCase() + username.slice(1));
+      setDisplayName(finalName.charAt(0).toUpperCase() + finalName.slice(1));
     }
   }, [location.pathname]); // Re-run whenever the route changes
 

@@ -30,10 +30,11 @@ const seed = async () => {
     await WorkoutPlan.deleteMany({});
 
     // 3. Helper: Create User with Hashed Password
-    const createHashedUser = async (email: string, role: "learner" | "trainer" | "admin") => {
+    const createHashedUser = async (email: string, name: string, role: "learner" | "trainer" | "admin") => {
       const hashedPassword = await bcrypt.hash("Password123!", 10);
       return await User.create({
         email,
+        name,
         password: hashedPassword,
         role,
         provider: "local"
@@ -46,7 +47,7 @@ const seed = async () => {
     console.log("🏋️ Creating Demo Trainers...");
 
     // Coach Sarah
-    const sarahUser = await createHashedUser("coach_sarah@fitmate.ai", "trainer");
+    const sarahUser = await createHashedUser("coach_sarah@fitmate.ai", "Sarah Strength", "trainer");
     const sarahProfile = await Trainer.create({
       userId: sarahUser._id,
       fullName: "Sarah Strength",
@@ -61,7 +62,7 @@ const seed = async () => {
     });
 
     // Coach Mike
-    const mikeUser = await createHashedUser("coach_mike@fitmate.ai", "trainer");
+    const mikeUser = await createHashedUser("coach_mike@fitmate.ai", "Mike Cardio", "trainer");
     const mikeProfile = await Trainer.create({
       userId: mikeUser._id,
       fullName: "Mike Cardio",
@@ -76,7 +77,7 @@ const seed = async () => {
     });
 
     // Coach Elena
-    const elenaUser = await createHashedUser("coach_elena@fitmate.ai", "trainer");
+    const elenaUser = await createHashedUser("coach_elena@fitmate.ai", "Elena Flow", "trainer");
     const elenaProfile = await Trainer.create({
       userId: elenaUser._id,
       fullName: "Elena Flow",
@@ -96,7 +97,7 @@ const seed = async () => {
     console.log("🏃 Creating Demo Athletes...");
 
     // Athlete 1 (Connected to Sarah)
-    const testAthleteUser = await createHashedUser("test_athlete@fitmate.ai", "learner");
+    const testAthleteUser = await createHashedUser("test_athlete@fitmate.ai", "John Athlete", "learner");
     await Profile.create({
       userId: testAthleteUser._id,
       age: 28,
@@ -114,7 +115,7 @@ const seed = async () => {
     });
 
     // Athlete 2 (Unconnected)
-    const demoUser = await createHashedUser("demo_user@fitmate.ai", "learner");
+    const demoUser = await createHashedUser("demo_user@fitmate.ai", "Demo User", "learner");
     await Profile.create({
       userId: demoUser._id,
       age: 34,

@@ -32,6 +32,7 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -89,10 +90,12 @@ const Chatbot: React.FC = () => {
     let accumulatedContent = "";
 
     try {
+      setIsTyping(true);
       await ChatService.streamMessage(
         userMsg.content,
         activeThreadId,
         (chunk) => {
+          setIsTyping(false);
           accumulatedContent += chunk;
           setMessages(prev => prev.map(msg => 
             msg.id === assistantId ? { ...msg, content: accumulatedContent } : msg
@@ -105,12 +108,14 @@ const Chatbot: React.FC = () => {
           }
         },
         (err) => {
+          setIsTyping(false);
           setMessages(prev => prev.map(msg => 
             msg.id === assistantId ? { ...msg, content: `Error: ${err.message}` } : msg
           ));
         }
       );
     } catch (err: any) {
+      setIsTyping(false);
       // Fallback for unexpected top-level errors
       console.error(err);
     }
@@ -133,6 +138,21 @@ const Chatbot: React.FC = () => {
         </header>
 
         <MessageList messages={messages} messagesEndRef={messagesEndRef} />
+        
+        {isTyping && (
+          <div className="px-6 py-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex gap-4 items-start max-w-[800px]">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 flex-shrink-0">
+                <FaRobot size={16} className="animate-bounce" />
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl rounded-tl-none border border-slate-100 flex gap-1.5 items-center">
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 bg-white border-t border-slate-100 text-slate-900">
           <div className="max-w-[1000px] mx-auto flex items-center gap-3">

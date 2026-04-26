@@ -13,6 +13,7 @@ export const AuthService = {
     localStorage.setItem('token', data.token);
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('userEmail', credentials.email);
+    localStorage.setItem('userName', data.name || '');
     localStorage.setItem('userRole', data.role);
     localStorage.setItem('hasProfile', data.hasProfile ? 'true' : 'false');
     localStorage.setItem('hasTrainerProfile', data.hasTrainerProfile ? 'true' : 'false');
@@ -26,6 +27,7 @@ export const AuthService = {
     localStorage.setItem('token', data.token);
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('userEmail', userData.email);
+    localStorage.setItem('userName', data.name || userData.name || '');
     localStorage.setItem('userRole', data.role);
     return data;
   },

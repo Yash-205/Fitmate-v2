@@ -64,7 +64,7 @@ export function useAppFlow() {
         localStorage.setItem('activePersona', defaultPersona);
         
         // window.location.href is used to force a full reload and reset the app state/nav
-        window.location.href = defaultPersona === 'trainer' ? '/trainer/dashboard' : '/workout';
+        window.location.href = defaultPersona === 'trainer' ? '/trainer/dashboard' : '/profile';
       }
     }
   };
@@ -78,8 +78,8 @@ export function useAppFlow() {
       // Health Assessment finished.
       setIsProfileSetupOpen(false);
       const role = localStorage.getItem('userRole');
-      // If they are a trainer, they go to their dashboard; otherwise, they see their workout plan.
-      window.location.href = role === 'trainer' ? '/trainer/dashboard' : '/workout';
+      // If they are a trainer, they go to their dashboard; otherwise, they see their training blueprint (profile).
+      window.location.href = role === 'trainer' ? '/trainer/dashboard' : '/profile';
     } else {
       // Trainer Profile (bio/certs) finished.
       setIsTrainerSetupOpen(false);

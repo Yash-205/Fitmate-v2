@@ -115,7 +115,12 @@ const Workout: React.FC = () => {
 
         {error && <div className="mx-2 p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-xs font-bold shadow-sm">{error}</div>}
 
-        {plan && !generating && plan.schedule && (
+        {generating ? (
+          <div className="flex flex-col items-center justify-center py-32 space-y-4">
+            <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-slate-500 font-bold animate-pulse text-sm">AI Coach is crafting your plan...</p>
+          </div>
+        ) : plan && plan.schedule && (
           <div className="space-y-6">
             {/* 1. Integrated Command Center (Strategic Context) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 px-2 items-start h-auto">

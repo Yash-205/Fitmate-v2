@@ -23,9 +23,13 @@ const Profile: React.FC = () => {
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [expandedPhase, setExpandedPhase] = useState<number>(0);
   const [userRole] = useState<string | null>(localStorage.getItem('userRole'));
   const [activePersona, setActivePersona] = useState<'learner' | 'trainer'>(localStorage.getItem('activePersona') as 'learner' | 'trainer' || 'learner');
+  
+  // Calendar & Phase Management (Synced with Workout Page)
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(0);
+  const [monthOffset, setMonthOffset] = useState<number>(0);
 
   useEffect(() => {
     (async () => {
@@ -61,6 +65,33 @@ const Profile: React.FC = () => {
     setActivePersona(newPersona);
     localStorage.setItem('activePersona', newPersona);
     window.location.href = newPersona === 'trainer' ? '/trainer/dashboard' : '/workout';
+  };
+
+  const handlePhaseChange = (index: number) => {
+    setCurrentPhaseIndex(index);
+    if (!plan?.mesoPhases?.[0]) return;
+    const firstPhaseDate = new Date(plan.mesoPhases[0].startDate);
+    const targetPhaseDate = new Date(plan.mesoPhases[index].startDate);
+    const yearsDiff = targetPhaseDate.getFullYear() - firstPhaseDate.getFullYear();
+    const monthsDiff = targetPhaseDate.getMonth() - firstPhaseDate.getMonth();
+    setMonthOffset(yearsDiff * 12 + monthsDiff);
+  };
+
+  const handleMonthChange = (offset: number) => {
+    setMonthOffset(offset);
+    if (!plan?.mesoPhases) return;
+    const firstPhaseDate = new Date(plan.mesoPhases[0].startDate);
+    const targetMonthDate = new Date(firstPhaseDate);
+    targetMonthDate.setMonth(targetMonthDate.getMonth() + offset);
+    targetMonthDate.setDate(1);
+    const phaseIndex = plan.mesoPhases.findIndex(p => {
+      const start = new Date(p.startDate).setHours(0,0,0,0);
+      const end = new Date(p.endDate).setHours(23,59,59,999);
+      return targetMonthDate.getTime() >= start && targetMonthDate.getTime() <= end;
+    });
+    if (phaseIndex !== -1 && phaseIndex !== currentPhaseIndex) {
+      setCurrentPhaseIndex(phaseIndex);
+    }
   };
 
   if (loading) {
@@ -156,7 +187,14 @@ const Profile: React.FC = () => {
           <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-[80px] lg:self-start">
             <AthleteProfileCard profile={profile} />
             {plan && (
-              <PhaseCalendar schedule={plan.schedule} mesoPhases={plan.mesoPhases} selectedDate={null} onSelectDate={() => {}} />
+              <PhaseCalendar 
+                schedule={plan.schedule} 
+                mesoPhases={plan.mesoPhases} 
+                selectedDate={selectedDateFilter} 
+                onSelectDate={setSelectedDateFilter}
+                monthOffset={monthOffset}
+                onMonthChange={handleMonthChange}
+              />
             )}
           </div>
 
@@ -173,7 +211,11 @@ const Profile: React.FC = () => {
             ) : (
               <>
                 <StrategySection plan={plan} />
-                <PhaseAccordion mesoPhases={plan.mesoPhases} expandedPhase={expandedPhase} setExpandedPhase={setExpandedPhase} />
+                <PhaseAccordion 
+                  mesoPhases={plan.mesoPhases} 
+                  expandedPhase={currentPhaseIndex} // Use currentPhaseIndex for expansion
+                  setExpandedPhase={handlePhaseChange} // Use handlePhaseChange for manual clicks
+                />
               </>
             )}
           </div>

@@ -118,9 +118,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
             <Button 
               type="submit" 
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#FF4500] hover:bg-[#E63E00] text-white font-bold tracking-wide active:scale-95 transition-all mt-4 shadow-lg shadow-orange-600/20"
+              className="w-full h-12 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold tracking-wide active:scale-95 transition-all mt-4 shadow-lg shadow-orange-600/20 flex items-center justify-center gap-2"
             >
-              {loading ? 'Processing...' : view === 'login' ? 'Log In' : 'Sign Up'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                view === 'login' ? 'Log In' : 'Sign Up'
+              )}
             </Button>
           </form>
 
