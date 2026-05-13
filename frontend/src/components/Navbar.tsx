@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
 import { Dumbbell } from 'lucide-react';
 import { FaUser, FaSignOutAlt } from 'react-icons/fa';
 
@@ -89,7 +90,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
         
         {/* BRANDING / LOGO */}
         {/* If logged in, the logo takes you to Chat; otherwise, it takes you to the Landing Page */}
-        <Link to={isLoggedIn ? "/chat" : "/"} className="flex items-center gap-2.5 font-extrabold text-2xl text-slate-900 tracking-tight group">
+        <Link to={isLoggedIn ? ROUTES.CHAT : ROUTES.HOME} className="flex items-center gap-2.5 font-extrabold text-2xl text-slate-900 tracking-tight group">
           <div className="p-1.5 bg-orange-600 rounded-lg text-white group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-orange-600/20">
             <Dumbbell size={18} />
           </div>
@@ -99,14 +100,14 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
         <div className="flex items-center gap-8">
           {/* DESKTOP LINKS */}
           <div className="hidden lg:flex items-center gap-8">
-            <NavLink to="/">Home</NavLink>
+            <NavLink to={ROUTES.HOME}>Home</NavLink>
             
             {/* CONDITIONAL DASHBOARD LINK: Show 'Dashboard' for coaches, 'Workout Plan' for athletes */}
             {activePersona === 'trainer' ? (
-              <NavLink to="/trainer/dashboard">Dashboard</NavLink>
+              <NavLink to={ROUTES.TRAINER_DASHBOARD}>Dashboard</NavLink>
             ) : (
               <NavLink 
-                to={isLoggedIn ? "/workout" : "#"} 
+                to={isLoggedIn ? ROUTES.WORKOUT : "#"} 
                 onClick={(e) => {
                   // If a guest clicks 'Workout Plan', don't navigate; show the login modal instead
                   if (!isLoggedIn) {
@@ -119,12 +120,12 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
               </NavLink>
             )}
             
-            <NavLink to="/trainers">Trainers</NavLink>
+            <NavLink to={ROUTES.TRAINERS}>Trainers</NavLink>
             
             {/* The AI Coach is only visible in Athlete mode */}
             {activePersona === 'learner' && (
               <NavLink 
-                to={isLoggedIn ? "/chat" : "#"}
+                to={isLoggedIn ? ROUTES.CHAT : "#"}
                 onClick={(e) => {
                   if (!isLoggedIn) {
                     e.preventDefault();
@@ -175,7 +176,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
               )}
 
               {/* USER PROFILE LINK */}
-              <Link to="/profile" className="flex items-center gap-2.5 py-2 px-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-slate-700 hover:bg-white hover:border-orange-200 transition-all shadow-sm">
+              <Link to={ROUTES.PROFILE} className="flex items-center gap-2.5 py-2 px-4 rounded-2xl bg-slate-50 border border-slate-100 font-bold text-slate-700 hover:bg-white hover:border-orange-200 transition-all shadow-sm">
                 <div className="w-6 h-6 rounded-lg bg-white shadow-sm flex items-center justify-center text-orange-500">
                   <FaUser size={10} />
                 </div>

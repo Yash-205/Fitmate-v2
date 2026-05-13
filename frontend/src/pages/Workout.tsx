@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { WorkoutService } from '@/services/api';
 import type { WorkoutPlan } from '@/types/workout';
@@ -21,7 +20,6 @@ import { Settings2 } from 'lucide-react';
  * - Triggering plan evolution/adjustment based on user feedback.
  */
 const Workout: React.FC = () => {
-  const navigate = useNavigate();
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -43,7 +41,7 @@ const Workout: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchPlan(); }, [navigate]);
+  useEffect(() => { fetchPlan(); }, []);
 
   const handlePhaseChange = (index: number) => {
     setCurrentPhaseIndex(index);

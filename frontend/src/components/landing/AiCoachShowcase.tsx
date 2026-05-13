@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
 import { Button } from "@/components/ui/button";
 import { 
   Dumbbell, 
@@ -53,11 +55,22 @@ export const AiCoachShowcase: React.FC = () => {
 
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-4">
-                <Button className="h-12 px-8 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold transition-all flex items-center gap-2">
-                  <MessageCircle size={18} /> Start Chatting Now
+                <Button 
+                  asChild
+                  className="h-12 px-8 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold transition-all flex items-center gap-2"
+                >
+                  <Link to={ROUTES.CHAT}>
+                    <MessageCircle size={18} /> Start Chatting
+                  </Link>
                 </Button>
-                <Button variant="outline" className="h-12 px-8 rounded-xl border-slate-200 hover:bg-white font-bold transition-all">
-                  Learn More
+                <Button 
+                  asChild
+                  variant="outline" 
+                  className="h-12 px-8 rounded-xl border-slate-200 hover:bg-white font-bold transition-all"
+                >
+                  <Link to={ROUTES.WORKOUT}>
+                    Learn More
+                  </Link>
                 </Button>
               </div>
               <div className="px-4 py-2 bg-orange-50 border border-orange-100 rounded-xl w-fit">

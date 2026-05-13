@@ -36,15 +36,12 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/workout", workoutRoutes);
 app.use("/api/trainer", trainerRoutes);
 
-// Test route
 app.get("/", (req, res) => {
     res.send("FitMate API is running 🚀");
 });
 
-// Port
 const PORT = process.env.PORT || 8000;
 
-// Start server
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

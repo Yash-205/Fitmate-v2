@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProfileService, WorkoutService, AuthService } from '@/services/api';
@@ -144,8 +145,12 @@ const Profile: React.FC = () => {
               </div>
             )}
 
-            <Button variant="outline" onClick={() => navigate('/profile-setup')} className="border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-5 h-10 font-bold">
-              Edit Assessment
+            <Button 
+              asChild
+              variant="outline" 
+              className="border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-5 h-10 font-bold"
+            >
+              <Link to="/profile-setup">Edit Assessment</Link>
             </Button>
             
             <Button 
@@ -157,8 +162,11 @@ const Profile: React.FC = () => {
               <span>Log Out</span>
             </Button>
 
-            <Button onClick={() => navigate('/workout')} className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl px-6 h-10 shadow-lg shadow-orange-500/20 transition-all active:scale-95">
-              Weekly Plan →
+            <Button 
+              asChild
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl px-6 h-10 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
+            >
+              <Link to={ROUTES.WORKOUT}>Weekly Plan →</Link>
             </Button>
           </div>
         </div>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Star } from 'lucide-react';
-import { ImageWithFallback } from '@/components/common/ImageWithFallback';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -61,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           {/* Right Image/Mockup */}
           <div className="relative animate-in fade-in zoom-in-95 duration-1000 delay-300">
             <div className="rounded-[3rem] overflow-hidden shadow-2xl skew-y-1 hover:skew-y-0 transition-transform duration-700">
-              <ImageWithFallback 
+              <img 
                 src="https://images.unsplash.com/photo-1544033527-b192daee1f5b?q=80&w=2070&auto=format&fit=crop" 
                 alt="Training rings"
                 className="w-full aspect-[4/5] object-cover"

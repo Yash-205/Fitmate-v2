@@ -33,6 +33,13 @@ FitMate uses a sophisticated agentic architecture to manage intelligence:
 - **STM (Short-Term Memory)**: A custom **Summarization Node** that prunes conversation history while maintaining a persistent context summary.
 - **LTM (Long-Term Memory)**: **Mem0** integration for cross-session learning of athlete preferences and baseline personality.
 - **Checkpointer**: MongoDB-backed thread persistence for stateful AI conversations.
+- **LTM**: Mem0 for user preference persistence.
+
+### Testing & Quality Assurance
+- **Unit & Integration**: **Vitest** (Frontend & Backend)
+- **API Testing**: **Supertest**
+- **E2E Testing**: **Cypress**
+- **Type Safety**: TypeScript 6.x
 
 ## 📁 Project Structure
 ```text

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { X } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 import { AuthService } from '@/services/api';
 
@@ -63,26 +64,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
   // to share loading/error behaviour and only switch the API call based on
   // the current `view` state.
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(''); // clear any previous error
-    setLoading(true);
-
+    e.preventDefault(); // Prevents page reload
     try {
-      // Choose API call based on current view. AuthService is a thin wrapper
-      // around your backend endpoints - check services/api for implementation.
-      const data = view === 'login'
-        ? await AuthService.login({ email: authData.email, password: authData.password })
-        : await AuthService.signup({ email: authData.email, password: authData.password, name: authData.name });
+      setLoading(true); // Start spinner
+      setError('');    // Clear previous errors
 
-      // onSuccess tells the parent what to do next (e.g. close modal,
-      // redirect to onboarding, or refresh user state). The `hasProfile`
-      // flag comes from the backend and indicates if onboarding is needed.
+      let data;
+      // 1. Determine whether to call signup or login based on current modal view
+      if (view === 'signup') {
+        data = await AuthService.signup(authData);
+      } else {
+        data = await AuthService.login({ email: authData.email, password: authData.password });
+      }
+
+      // 2. Trigger parent success callback (which redirects the user)
+      // data.hasProfile is used to check if the user needs to complete onboarding
       onSuccess(data.hasProfile);
     } catch (err: any) {
-      // Show a human-friendly error. AuthService should throw an Error with
-      // message populated, but you can customize handling here (e.g. map
-      // status codes to messages).
+      // 3. Display error message if the API request fails
       setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false); // Stop spinner
+    }
+  };
+
+  /**
+   * Handles the success response from the Google SDK
+   * @param credentialResponse Contains the 'credential' (ID Token)
+   */
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // 1. Pass the Google JWT to our AuthService
+      const data = await AuthService.googleAuth(credentialResponse.credential);
+      
+      // 2. Complete the authentication flow in the UI
+      onSuccess(data.hasProfile);
+    } catch (err: any) {
+      // 3. Handle specific Google Auth failures
+      setError(err.message || 'Google Auth failed');
     } finally {
       setLoading(false);
     }
@@ -182,6 +204,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
               )}
             </Button>
           </form>
+
+          <div className="relative flex items-center py-2">
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">Or continue with</span>
+            <div className="flex-grow border-t border-slate-200"></div>
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google Login Failed')}
+              theme="outline"
+              size="large"
+              shape="pill"
+            />
+          </div>
 
           {/* View toggle: lets user switch between login and signup */}
           <p className="text-center text-sm font-medium text-slate-500">

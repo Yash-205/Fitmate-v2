@@ -1,0 +1,15 @@
+MONGO_URI=mongodb+srv://yash:Yash123%23@cluster0.l87dhoe.mongodb.net/fitmatev2?retryWrites=true&w=majority
+
+PORT=8001
+
+JWT_SECRET=supersecretkey123
+
+GROQ_API_KEY=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
+
+OPENAI_API_KEY=dummy
+
+MEM0_API_KEY=m0-IUXkOOec0tNRlwYos6T4Gk0QUFD2odmapEURquSD
+
+GOOGLE_CLIENT_SECRET=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
+
+GOOGLE_CLIENT_ID=350538507214-mtpgf8pb5q147j9gnjtkak8oei4ajepg.apps.googleusercontent.com

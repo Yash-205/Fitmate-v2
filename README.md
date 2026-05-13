@@ -7,8 +7,9 @@ FitMate is a high-fidelity, professional-grade fitness platform that leverages c
 Detailed documentation has been organized into the following sections:
 
 - **[Quick Start & Setup](docs/setup/HOW_TO_SETUP.md)**: How to get the project running locally.
-- **[Architecture & Design](docs/architecture/)**: System evolution, diagrams, and architectural changes.
-- **[Technical Guides](docs/guides/customHooks.md)**: Frontend patterns and custom hooks.
+- **[Architecture & Design](docs/architecture/)**: System evolution, diagrams, and **[Microservices Discussion](docs/architecture/microservices_discussion.md)**.
+- **[Technical Guides](docs/guides/customHooks.md)**: Frontend patterns, custom hooks, and **[JSDOM Environment](docs/guides/jsdom.md)**.
+- **[Testing Strategy](docs/guides/testing.md)**: Overview of Vitest, Supertest, and how to run tests.
 - **[Implementation Plans](docs/plans/)**: Roadmap and streaming implementation details.
 - **[Technical Notes](docs/technical/)**: Debugging notes and troubleshooting.
 
