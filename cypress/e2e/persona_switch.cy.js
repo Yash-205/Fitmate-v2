@@ -96,8 +96,7 @@ describe('Persona Switching Flow', () => {
     
     // --- 6. PROFILE PAGE REDIRECTION ---
     // Verify that switching personas also works from the main Profile page
-    const username = userEmail.split('@')[0];
-    const capitalizedName = username.charAt(0).toUpperCase() + username.slice(1);
+    const capitalizedName = 'Switch User';
     
     // Click the User Profile link in the Nav
     cy.get('nav').contains(capitalizedName).click();

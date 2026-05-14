@@ -11,9 +11,9 @@ let mem0Client: MemoryClient | null = null;
  */
 export const getMem0Client = () => {
   if (!mem0Client) {
-    const apiKey = process.env.MEM0_API_KEY;
+    const apiKey = process.env.MEM0_API_KEY2;
     if (!apiKey) {
-      console.warn("MEM0_API_KEY not found in .env. Memory retrieval/storage will fail.");
+      console.warn("MEM0_API_KEY2 not found in .env. Memory retrieval/storage will fail.");
     }
     mem0Client = new MemoryClient({
       apiKey: apiKey || "dummy-key",

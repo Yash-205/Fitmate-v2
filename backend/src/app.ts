@@ -26,5 +26,11 @@ app.use("/api/trainer", trainerRoutes);
 app.get("/", (req, res) => {
     res.send("FitMate API is running 🚀");
 });
-
+app.get("/health", (req, res) => {
+  res.status(200).json({ 
+    status: "ok", 
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString() 
+  });
+});
 export default app;
