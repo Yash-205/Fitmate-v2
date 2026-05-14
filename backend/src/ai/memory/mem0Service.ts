@@ -51,3 +51,18 @@ export const addInteraction = async (userId: string, interaction: { role: 'user'
     console.error("Mem0 add initiation error:", err);
   }
 };
+
+/**
+ * Retrieve all memories for a specific user
+ */
+export const getAllMemories = async (userId: string) => {
+  try {
+    const mem0 = getMem0Client();
+    // Using a broad search term like "user" to retrieve baseline and lifestyle memories
+    const response = await mem0.search("user", { filters: { user_id: String(userId) } });
+    return response.results || response;
+  } catch (err) {
+    console.error("Mem0 getAll error:", err);
+    return [];
+  }
+};

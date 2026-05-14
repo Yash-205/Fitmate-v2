@@ -1,24 +1,15 @@
 {
   "compilerOptions": {
-    // Where your actual TypeScript code lives
     "rootDir": "./src",
-    // Where compiled JavaScript will go
     "outDir": "./dist",
-    // Module system (Node.js uses CommonJS by default)
     "module": "commonjs",
-    // JS version your TS compiles down to (ES6 = modern Node support)
     "target": "ES6",
-    // Allows default imports like: import express from "express"
     "esModuleInterop": true,
-    // Enables strict type checking (VERY important)
     "strict": true,
-    // Includes Node.js type definitions (for req, res, process, etc.)
-    "types": [
-      "node"
-    ],
-    // Skips type checking of node_modules (faster builds)
+    "types": ["node"],
     "skipLibCheck": true,
-    // Prevents case mismatch issues (Mac vs Linux bugs)
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "vitest.config.ts"]
 }

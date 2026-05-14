@@ -1,4 +1,5 @@
 import { Response } from "express";
+import mongoose from "mongoose";
 import Profile from "../models/Profile";
 import { AuthRequest } from "../types/express";
 import { getMem0Client } from "../ai/memory/mem0Service";
@@ -7,19 +8,12 @@ import WorkoutPlan from "../models/WorkoutPlan";
 
 /**
  * Profile Controller
- * 
- * Manages user physical profiles, baseline assessments, and trainer connections.
- * It also triggers AI-driven strategy generation when a profile is created or updated.
  */
 
-/**
- * @desc    Create or update user profile and trigger AI strategy generation
- * @route   POST /api/profile
- * @access  Private
- */
 export const upsertProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const {
       age, gender, weight, height,
@@ -35,117 +29,75 @@ export const upsertProfile = async (req: AuthRequest, res: Response) => {
       diet
     };
 
-    let profile = await Profile.findOne({ userId });
+    // Explicitly cast to ObjectId to ensure query consistency
+    const userObjectId = new mongoose.Types.ObjectId(String(userId));
+
+    let profile = await Profile.findOne({ userId: userObjectId });
 
     if (profile) {
       profile = await Profile.findOneAndUpdate(
-        { userId },
+        { userId: userObjectId },
         profileData,
         { new: true }
       );
     } else {
       profile = await Profile.create({
-        userId,
+        userId: userObjectId,
         ...profileData,
       });
     }
 
-    // Sync foundational data to LTM (Fire & Forget)
+    // Mem0 Sync (Fire & Forget)
     try {
       const mem0 = getMem0Client();
-      const baselineContext = `User Baseline Assessment:
-Goal: ${goal}
-Metrics: ${age} years old, ${gender}, ${weight}kg, ${height}cm.
-Training Age/Experience: ${trainingExperience}.
-Limitations/Injuries: ${injuries || "None"}.
-Availability: ${availableDays} days/week, ${sessionDuration} mins/session.
-Lifestyle/Readiness: Sleep (${sleepQuality}), Stress (${stressLevel}), Diet (${diet}).`;
+      const memoryUpdate = [{
+        role: "user" as const,
+        content: `User Profile Update: Goal is ${goal}, ${age}yo ${gender}, ${weight}kg.`
+      }];
+      mem0.add(memoryUpdate, { user_id: String(userId) }).catch(e => console.error("Mem0 error:", e));
+    } catch (e) {}
 
-      const memoryUpdate = [
-        {
-          role: "user" as const,
-          content: baselineContext
-        }
-      ];
-      mem0.add(memoryUpdate, { user_id: String(userId) }).catch(e => console.error("Mem0 add error during profile upsert:", e));
-    } catch (err) {
-      console.error("Mem0 storage error initiation in profile upsert:", err);
-    }
-
-    // Phase 1: Generate Strategic Roadmap
+    // Strategy Agent
     try {
-      if (!userId) throw new Error("Unauthorized: User ID missing");
-      console.log(`[Profile] Triggering baseline strategy for User ${userId}...`);
-      
       const strategy = await runStrategyAgent(profile, userId);
-      
-      if (!strategy || !strategy.mesoPhases) {
-        throw new Error("AI failed to return mesoPhases for strategy.");
+      if (strategy && strategy.mesoPhases) {
+        await WorkoutPlan.findOneAndUpdate(
+          { userId: userObjectId },
+          { $set: { ...strategy, userId: userObjectId } },
+          { upsert: true }
+        );
       }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      let currentMarkerDate = new Date(today);
-      
-      const phasesWithDates = strategy.mesoPhases.map((phase: any) => {
-        const start = new Date(currentMarkerDate);
-        const end = new Date(currentMarkerDate);
-        // Correct date range (end of the week is start + 7days - 1)
-        end.setDate(end.getDate() + (phase.durationWeeks * 7) - 1);
-        
-        // Next phase starts the day after this one ends
-        currentMarkerDate = new Date(end);
-        currentMarkerDate.setDate(end.getDate() + 1);
-        
-        return { ...phase, startDate: start, endDate: end };
-      });
-
-      await WorkoutPlan.findOneAndUpdate(
-        { userId },
-        {
-          $set: {
-            goal: strategy.goal,
-            splitType: strategy.splitType,
-            experienceLevel: strategy.experienceLevel,
-            overarchingStrategy: strategy.overarchingStrategy,
-            weeklyFrequency: strategy.weeklyFrequency,
-            mesoPhases: phasesWithDates,
-            currentPhase: strategy.mesoPhases[0]?.name,
-            schedule: [], // Force new microcycle on first visit
-            userId: userId
-          }
-        },
-        { upsert: true, new: true }
-      );
-      console.log(`[Profile] Strategy successfully generated and saved for User ${userId}.`);
-    } catch (err) {
-      console.error("Strategy generation failed during profile upsert:", err);
-      // We don't throw here - we want the profile save to succeed even if AI is slow
+    } catch (e) {
+      console.error("Strategy generation failed:", e);
     }
 
     res.json(profile);
   } catch (error) {
+    console.error("Upsert error:", error);
     res.status(500).json({ message: "Profile save failed" });
   }
 };
 
-/**
- * @desc    Get the authenticated user's profile
- * @route   GET /api/profile
- * @access  Private
- */
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const profile = await Profile.findOne({ userId });
+    const userObjectId = new mongoose.Types.ObjectId(String(userId));
+    console.log(`[Debug] Searching for Profile with userId (ObjectId): ${userObjectId}`);
 
+    const profile = await Profile.findOne({ userId: userObjectId });
+    
     if (!profile) {
+      const allProfiles = await Profile.find({});
+      console.log(`[Debug] 404! Found ${allProfiles.length} total profiles in DB.`);
+      console.log(`[Debug] All Profile userIds in DB:`, allProfiles.map(p => p.userId.toString()));
       return res.status(404).json({ message: "Profile not found" });
     }
-
+    
     res.json(profile);
   } catch (error) {
+    console.error("Get profile error:", error);
     res.status(500).json({ message: "Failed to fetch profile" });
   }
 };

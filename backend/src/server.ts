@@ -1,14 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-import express from "express";
-import cors from "cors";
-import connectDB from "./config/db"
-import authRoutes from "./routes/authRoutes";
-import profileRoutes from "./routes/profileRoutes"; 
-import chatRoutes from "./routes/chatRoutes";
-import workoutRoutes from "./routes/workoutRoutes";
-import testRoutes from "./routes/testRoutes";
-import trainerRoutes from "./routes/trainerRoutes";
+import connectDB from "./config/db";
+import app from "./app";
 
 /**
  * FitMate Backend Server
@@ -19,26 +12,6 @@ import trainerRoutes from "./routes/trainerRoutes";
 
 // connect database
 connectDB();
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-if (process.env.NODE_ENV === "test") {
-  app.use("/api/test", testRoutes);
-}
-
-app.use("/api/chat", chatRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/workout", workoutRoutes);
-app.use("/api/trainer", trainerRoutes);
-
-app.get("/", (req, res) => {
-    res.send("FitMate API is running 🚀");
-});
 
 const PORT = process.env.PORT || 8000;
 
