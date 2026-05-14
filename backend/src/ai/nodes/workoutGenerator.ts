@@ -77,10 +77,27 @@ export async function generateStrategy(state: typeof WorkoutState.State) {
 
     console.log(`[Node: Strategy] Roadmap rebuilt: ${response.splitType} | ${response.mesoPhases.length} phases.`);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let runningDate = new Date(today);
+    const mesoPhasesWithDates = response.mesoPhases.map((phase: any) => {
+      const startDate = new Date(runningDate);
+      const endDate = new Date(startDate);
+      const weeks = Number(phase.durationWeeks) || 4;
+      endDate.setDate(startDate.getDate() + (weeks * 7) - 1);
+      
+      runningDate = new Date(endDate);
+      runningDate.setDate(endDate.getDate() + 1);
+
+      return { ...phase, startDate, endDate };
+    });
+
     return { 
       finalPlan: {
         ...response,
         userId: state.userId,
+        mesoPhases: mesoPhasesWithDates,
         currentPhase: response.mesoPhases[0].name,
         schedule: [] 
       }
@@ -146,10 +163,19 @@ export async function generateMicrocycle(state: typeof WorkoutState.State) {
 
     console.log(`[Node: Microcycle] Schedule complete. User: ${userId}`);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const scheduleWithDates = response.schedule.map((dayPlan: any, index: number) => {
+      const planDate = new Date(today);
+      planDate.setDate(today.getDate() + index);
+      return { ...dayPlan, date: planDate };
+    });
+
     return { 
       finalPlan: {
         ...currentPlan,
-        schedule: response.schedule,
+        schedule: scheduleWithDates,
         progressionRule: response.progressionRule,
         deloadStrategy: response.deloadStrategy,
       }

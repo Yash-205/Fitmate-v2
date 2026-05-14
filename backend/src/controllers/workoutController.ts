@@ -78,39 +78,7 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
       );
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // 3. Inject dates for the Strategic Roadmap (Mesocycles)
-    let runningDate = new Date(today);
-    const mesoPhasesWithDates = updatedPlanData.mesoPhases.map((phase: any) => {
-      const startDate = new Date(runningDate);
-      const endDate = new Date(startDate);
-      
-      // Safety: ensure durationWeeks is a valid number
-      const weeks = Number(phase.durationWeeks) || 4; 
-      endDate.setDate(startDate.getDate() + (weeks * 7) - 1);
-      
-      // Update runningDate for next phase
-      runningDate = new Date(endDate);
-      runningDate.setDate(endDate.getDate() + 1);
-
-      return {
-        ...phase,
-        startDate: isNaN(startDate.getTime()) ? new Date() : startDate,
-        endDate: isNaN(endDate.getTime()) ? new Date() : endDate
-      };
-    });
-
-    // 4. Inject dates for the 7-day schedule (Microcycle)
-    // We start the current week's schedule from today
-    const scheduleWithDates = updatedPlanData.schedule.map((dayPlan: any, index: number) => {
-      const planDate = new Date(today);
-      planDate.setDate(today.getDate() + index);
-      return { ...dayPlan, date: planDate };
-    });
-
-    // 5. Update the entire plan document
+    // 3. Update the entire plan document
     const savedPlan = await WorkoutPlan.findOneAndUpdate(
       { userId },
       {
@@ -120,9 +88,9 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
           experienceLevel: updatedPlanData.experienceLevel,
           overarchingStrategy: updatedPlanData.overarchingStrategy,
           weeklyFrequency: updatedPlanData.weeklyFrequency,
-          mesoPhases: mesoPhasesWithDates,
+          mesoPhases: updatedPlanData.mesoPhases,
           currentPhase: updatedPlanData.currentPhase,
-          schedule: scheduleWithDates,
+          schedule: updatedPlanData.schedule,
           progressionRule: updatedPlanData.progressionRule,
           deloadStrategy: updatedPlanData.deloadStrategy,
           createdAt: new Date(),
