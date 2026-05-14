@@ -59,7 +59,7 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
       console.log(`[Controller] No existing plan for User ${userId}. Starting Foundation Flow...`);
       const strategy = await runStrategyAgent(profile, userId);
       // For initial run, we assume feedback is null or the strategy handles it
-      updatedPlanData = await generateMicrocycle({ 
+      const microcycleResult = await generateMicrocycle({ 
         profile, 
         userId, 
         currentMeso: strategy.mesoPhases[0],
@@ -67,6 +67,7 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
         feedback: null,
         strategyNeeded: true 
       });
+      updatedPlanData = microcycleResult.finalPlan;
     } else {
       // EVOLUTION FLOW: tweak existing plan
       updatedPlanData = await runEvolutionAgent(
@@ -85,7 +86,10 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
     const mesoPhasesWithDates = updatedPlanData.mesoPhases.map((phase: any) => {
       const startDate = new Date(runningDate);
       const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + (phase.durationWeeks * 7) - 1);
+      
+      // Safety: ensure durationWeeks is a valid number
+      const weeks = Number(phase.durationWeeks) || 4; 
+      endDate.setDate(startDate.getDate() + (weeks * 7) - 1);
       
       // Update runningDate for next phase
       runningDate = new Date(endDate);
@@ -93,8 +97,8 @@ export const generateWorkoutPlan = async (req: Request, res: Response) => {
 
       return {
         ...phase,
-        startDate,
-        endDate
+        startDate: isNaN(startDate.getTime()) ? new Date() : startDate,
+        endDate: isNaN(endDate.getTime()) ? new Date() : endDate
       };
     });
 

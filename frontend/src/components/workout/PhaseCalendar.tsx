@@ -27,7 +27,10 @@ export const PhaseCalendar = ({
     ? mesoPhases[0].startDate 
     : (schedule && schedule.length > 0) ? schedule[0].date : today.toISOString();
     
-  const baseStartDate = new Date(baseStartStr);
+  let baseStartDate = new Date(baseStartStr);
+  if (isNaN(baseStartDate.getTime())) {
+    baseStartDate = new Date();
+  }
   
   const displayDate = new Date(baseStartDate);
   displayDate.setMonth(displayDate.getMonth() + monthOffset);

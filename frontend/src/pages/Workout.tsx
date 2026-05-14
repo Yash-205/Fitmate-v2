@@ -46,18 +46,23 @@ const Workout: React.FC = () => {
   const handlePhaseChange = (index: number) => {
     setCurrentPhaseIndex(index);
     if (!plan?.mesoPhases?.[0]) return;
-    const firstPhaseDate = new Date(plan.mesoPhases[0].startDate);
-    const targetPhaseDate = new Date(plan.mesoPhases[index].startDate);
-    const yearsDiff = targetPhaseDate.getFullYear() - firstPhaseDate.getFullYear();
-    const monthsDiff = targetPhaseDate.getMonth() - firstPhaseDate.getMonth();
+    const d1 = new Date(plan.mesoPhases[0].startDate);
+    const d2 = new Date(plan.mesoPhases[index].startDate);
+    
+    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return;
+
+    const yearsDiff = d2.getFullYear() - d1.getFullYear();
+    const monthsDiff = d2.getMonth() - d1.getMonth();
     setMonthOffset(yearsDiff * 12 + monthsDiff);
   };
 
   const handleMonthChange = (offset: number) => {
     setMonthOffset(offset);
     if (!plan?.mesoPhases) return;
-    const firstPhaseDate = new Date(plan.mesoPhases[0].startDate);
-    const targetMonthDate = new Date(firstPhaseDate);
+    const d1 = new Date(plan.mesoPhases[0].startDate);
+    if (isNaN(d1.getTime())) return;
+
+    const targetMonthDate = new Date(d1);
     targetMonthDate.setMonth(targetMonthDate.getMonth() + offset);
     targetMonthDate.setDate(1);
     const phaseIndex = plan.mesoPhases.findIndex(p => {

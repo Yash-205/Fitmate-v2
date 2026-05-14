@@ -21,8 +21,11 @@ export const PhaseSlider: React.FC<PhaseSliderProps> = ({ mesoPhases, currentInd
   const phase = mesoPhases[currentIndex];
   const c = PHASE_COLORS[currentIndex % PHASE_COLORS.length];
   
-  const startStr = new Date(phase.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  const endStr = new Date(phase.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const d1 = new Date(phase.startDate);
+  const d2 = new Date(phase.endDate);
+  
+  const startStr = isNaN(d1.getTime()) ? 'TBD' : d1.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const endStr = isNaN(d2.getTime()) ? 'TBD' : d2.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   return (
     <div className="space-y-4">
