@@ -9,6 +9,7 @@ export default defineConfig({
         singleThread: true,
       },
     },
+    fileParallelism: false,
     isolate: true,
     include: ['tests/**/*.test.ts'],
     testTimeout: 30000,

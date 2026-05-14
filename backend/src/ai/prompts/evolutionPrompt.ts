@@ -10,7 +10,7 @@ User Feedback:
 "${feedback}"
 
 <Decision Criteria>
-- STRATEGIC SHIFT (true): If the user wants to change their fundamental training goal, training frequency (days/week), training split, says they are more/less advanced than the current phase suggests (e.g., "skip foundation", "I'm an expert"), or has a major lifestyle change.
+- STRATEGIC SHIFT (true): If the user reports a new injury, physical limitation, changes their fundamental training goal, training frequency (days/week), training split, says they are more/less advanced than the current phase suggests, or has a major lifestyle change.
 - ROUTINE TWEAK (false): If the user wants to swap an exercise, change sets/reps for a specific day, shorten a specific workout, or adjust intensity without changing the overall phase focus.
 </Decision Criteria>
 

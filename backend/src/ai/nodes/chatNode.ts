@@ -6,7 +6,7 @@ import { getCreativeModel } from "../utils/modelRegistry";
 
 export const chatNode = async (state: typeof MessagesAnnotation.State, config: any) => {
   const profile = config.configurable?.profile;
-  const userId = profile?._id || "default_user";
+  const userId = profile?.userId || profile?._id || "default_user";
   const lastMessage = state.messages[state.messages.length - 1].content as string;
 
   // 1. Retrieve relevant memories (LTM) using centralized helper

@@ -4,6 +4,7 @@ import { describe, it, beforeAll, afterAll, expect, vi } from 'vitest';
 import mongoose from 'mongoose';
 import app from '../src/app';
 import connectDB from '../src/config/db';
+import User from '../src/models/User';
 
 // NO MOCKS - This is a TRUE End-to-End Integration Test
 // It will call real LLMs (Groq) and real Long-Term Memory (Mem0)
@@ -21,14 +22,33 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
     process.env.NODE_ENV = 'test';
     await connectDB();
     console.log('\n🚀 --- TEST START: Initializing Isolated Test Database ---');
-  });
+    
+    if (mongoose.connection.db) {
+      // 1. Find all lingering test users and delete their Mem0 memories
+      const users = await User.find({});
+      if (users.length > 0) {
+        const { deleteAllMemories } = await import('../src/ai/memory/mem0Service');
+        for (const user of users) {
+          await deleteAllMemories(user._id.toString());
+        }
+      }
+      
+      // 2. Drop the test database
+      try {
+        await mongoose.connection.db.dropDatabase();
+        console.log('🧹 --- TEST START: Previous Test Database Cleaned ---\n');
+      } catch (err: any) {
+        if (err.message && err.message.includes('currently being dropped')) {
+          console.log('🧹 --- TEST START: Database already being cleaned by another process ---\n');
+        } else {
+          console.error('Error dropping database:', err);
+        }
+      }
+    }
+  }, 60000);
 
   afterAll(async () => {
-    // Cleanup: Drop the database and close connection
-    if (mongoose.connection.db) {
-      await mongoose.connection.db.dropDatabase();
-      console.log('🧹 --- TEST END: Test Database Cleaned & Connection Closed ---\n');
-    }
+    // Cleanup: Close connection
     await mongoose.connection.close();
   });
 
@@ -99,6 +119,34 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
     expect(getProfileRes.status).toBe(200);
     console.log('✅ Profile Data Verified.');
 
+    // 4.5 Chat with Agent about an injury
+    console.log('\n[Step 4.5] Chatting about an injury...');
+    const chatMsg = "I recently hurt my lower back and cannot do heavy squats. Can you keep this in mind?";
+    console.log(`[Chat Input]: ${chatMsg}`);
+
+    const chatRes = await request(app)
+      .post('/api/chat')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ message: chatMsg });
+
+    console.log(`[Chat Status]: ${chatRes.status}`);
+    
+    // Parse the SSE chunks to build the full response string
+    const rawText = chatRes.text || "";
+    const lines = rawText.split('\n');
+    let fullResponse = '';
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const data = JSON.parse(line.replace('data: ', ''));
+          if (data.chunk) fullResponse += data.chunk;
+        } catch (e) {
+        }
+      }
+    }
+    console.log(`[Chat Response Text]:\n${fullResponse || rawText}`);
+    expect(chatRes.status).toBe(200);
+
     // 5. Retrieve Mem0 Memories
     console.log('\n[Step 5] Retrieving Long-Term Memories (Mem0)...');
     console.log('--- ⏳ Waiting 10 seconds for Cloud AI indexing to complete... ---');
@@ -106,7 +154,8 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
     
     const { getAllMemories } = await import('../src/ai/memory/mem0Service');
     const memories = await getAllMemories(profileRes.body.userId);
-    console.log('✅ Real User Memories:', JSON.stringify(memories, null, 2));
+    console.log('✅ Real User Memories:');
+    console.log(JSON.stringify(memories, null, 2));
     
     console.log('\n✨ --- AUTH FLOW COMPLETED WITH REAL AI RESULTS ---\n');
   }, 180000); // 180 Second Timeout for Real AI work

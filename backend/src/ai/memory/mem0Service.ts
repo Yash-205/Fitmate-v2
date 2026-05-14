@@ -66,3 +66,16 @@ export const getAllMemories = async (userId: string) => {
     return [];
   }
 };
+
+/**
+ * Delete all memories for a specific user
+ */
+export const deleteAllMemories = async (userId: string) => {
+  try {
+    const mem0 = getMem0Client();
+    await mem0.deleteAll({ userId: String(userId) });
+    console.log(`[Mem0] Successfully deleted all memories for user ${userId}`);
+  } catch (err) {
+    console.error("Mem0 delete error:", err);
+  }
+};
