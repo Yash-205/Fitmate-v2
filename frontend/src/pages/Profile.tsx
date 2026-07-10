@@ -10,6 +10,7 @@ import { PhaseCalendar } from '@/components/workout/PhaseCalendar';
 import { AthleteProfileCard } from '@/components/profile/AthleteProfileCard';
 import { PhaseAccordion } from '@/components/profile/PhaseAccordion';
 import { StrategySection } from '@/components/profile/StrategySection';
+import { AIMemoryCard } from '@/components/profile/AIMemoryCard';
 
 /**
  * Profile Page
@@ -26,6 +27,7 @@ const Profile: React.FC = () => {
   const [error, setError] = useState('');
   const [userRole] = useState<string | null>(localStorage.getItem('userRole'));
   const [activePersona, setActivePersona] = useState<'learner' | 'trainer'>(localStorage.getItem('activePersona') as 'learner' | 'trainer' || 'learner');
+  const [memories, setMemories] = useState<any[]>([]);
   
   // Calendar & Phase Management (Synced with Workout Page)
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
@@ -36,12 +38,14 @@ const Profile: React.FC = () => {
     (async () => {
       try {
         setLoading(true);
-        const [profileData, planData] = await Promise.all([
+        const [profileData, planData, memoriesData] = await Promise.all([
           ProfileService.get(),
-          WorkoutService.getPlan().catch(() => null)
+          WorkoutService.getPlan().catch(() => null),
+          ProfileService.getMemories().catch(() => [])
         ]);
         setProfile(profileData);
         setPlan(planData);
+        setMemories(memoriesData);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -194,6 +198,7 @@ const Profile: React.FC = () => {
           {/* ──── Left Column: Profile Card ──── */}
           <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-[80px] lg:self-start">
             <AthleteProfileCard profile={profile} />
+            <AIMemoryCard memories={memories} />
             {plan && (
               <PhaseCalendar 
                 schedule={plan.schedule} 

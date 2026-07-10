@@ -4,6 +4,7 @@ import { AuthRequest } from "../types/express";
 import Profile from "../models/Profile";
 import ChatSession from "../models/ChatSession";
 import { streamAgent, getAgentHistory } from "../ai/graphs/chatGraph";
+import { addInteraction } from "../ai/memory/mem0Service";
 
 /**
  * Chat Controller
@@ -43,14 +44,24 @@ export const chat = async (req: AuthRequest, res: Response) => {
     res.setHeader('Connection', 'keep-alive');
 
     const eventStream = await streamAgent(message, profile, threadId);
+    let fullAiResponse = "";
     
     for await (const event of eventStream) {
       if (event.event === "on_chat_model_stream") {
         const chunk = event.data?.chunk?.content;
         if (chunk) {
+          fullAiResponse += chunk;
           res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
         }
       }
+    }
+
+    // Sync to Long-Term Memory (Mem0) - Non-blocking
+    if (fullAiResponse) {
+      addInteraction(String(req.userId), [
+        { role: 'user', content: message },
+        { role: 'assistant', content: fullAiResponse }
+      ]);
     }
 
     res.write(`data: ${JSON.stringify({ done: true, threadId })}\n\n`);

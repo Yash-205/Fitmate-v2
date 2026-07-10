@@ -6,6 +6,8 @@ import chatRoutes from "./routes/chatRoutes";
 import workoutRoutes from "./routes/workoutRoutes";
 import testRoutes from "./routes/testRoutes";
 import trainerRoutes from "./routes/trainerRoutes";
+import messageRoutes from "./routes/messageRoutes";
+
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/workout", workoutRoutes);
 app.use("/api/trainer", trainerRoutes);
+app.use("/api/messages", messageRoutes);
+
 
 app.get("/", (req, res) => {
     res.send("FitMate API is running 🚀");

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TrainerService } from '@/services/api';
+import { ChatBox } from '../components/chat/ChatBox';
 
 /**
  * Trainer Dashboard
@@ -14,6 +15,7 @@ export default function TrainerDashboard() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [trainerProfile, setTrainerProfile] = useState<any>(null);
+  const [showChatFor, setShowChatFor] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,6 +126,15 @@ export default function TrainerDashboard() {
                         <p className="text-sm font-bold text-slate-600 text-ellipsis overflow-hidden whitespace-nowrap">{client.trainingExperience}</p>
                       </div>
                     </div>
+                    {/* Add Message Button */}
+                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                      <button 
+                        onClick={() => setShowChatFor(client.userId?._id || client.userId)}
+                        className="text-xs font-bold bg-slate-900 hover:bg-orange-500 text-white px-4 py-2 rounded-xl transition-colors"
+                      >
+                        Message Athlete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -131,6 +142,15 @@ export default function TrainerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Global Chat Modal for Trainer Dashboard */}
+      {showChatFor && trainerProfile?.userId && (
+        <ChatBox 
+            currentUserId={trainerProfile.userId} 
+            targetUserId={showChatFor} 
+            onClose={() => setShowChatFor(null)} 
+        />
+      )}
     </div>
   );
 }

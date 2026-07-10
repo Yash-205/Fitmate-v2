@@ -12,9 +12,10 @@ export const getModel = (temperature = 0.1) => {
     apiKey: process.env.GROQ_API_KEY,
     model: "llama-3.1-8b-instant",
     temperature: temperature,
-    maxTokens: 3500, // Increased to prevent truncation of long 7-day plans
+    maxTokens: 4000,
+    maxRetries: 5, // Essential for 8B model stability
   });
 };
 
-export const getFastModel = () => getModel(0); // For summarization/structured tasks
-export const getCreativeModel = () => getModel(0.7); // For chat interactions
+export const getFastModel = () => getModel(0);
+export const getCreativeModel = () => getModel(0.7);

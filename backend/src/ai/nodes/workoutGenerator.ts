@@ -49,7 +49,6 @@ export async function evaluateAdjustmentIntent(state: typeof WorkoutState.State)
  */
 export async function generateStrategy(state: typeof WorkoutState.State) {
   try {
-    const model = getFastModel();
     const p = state.profile;
     const userId = state.userId;
     const feedback = state.feedback;
@@ -67,6 +66,8 @@ export async function generateStrategy(state: typeof WorkoutState.State) {
     // HARDENING: Ensure tool-calling stability
     const finalPrompt = `STRICT DATA MODE: GENERATE LONG-TERM STRATEGY. Output ONLY the tool call. No preamble.
     ${strategyPrompt}`;
+
+    const model = getFastModel();
 
     const structuredModel = model.withStructuredOutput(StrategyGeneratorSchema, { name: "training_strategy" });
     const response = await structuredModel.invoke(finalPrompt);

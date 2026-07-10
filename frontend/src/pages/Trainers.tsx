@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TrainerService, ProfileService } from '@/services/api';
+import { ChatBox } from '../components/chat/ChatBox';
+import { registerUserForChat } from '../services/socket';
 
 /**
  * Trainers Discovery Page
@@ -15,6 +17,9 @@ interface TrainersProps {
 }
 
 export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupClick }: TrainersProps) {
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+const [showChatFor, setShowChatFor] = useState<string | null>(null);
+
   const [trainers, setTrainers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,8 +45,14 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupCli
           hasToken ? ProfileService.get().catch(() => null) : Promise.resolve(null)
         ]);
         setTrainers(trainerData);
+        
         if (profileData?.trainerId) {
           setCurrentTrainerId(profileData.trainerId);
+        }
+        if (profileData?.userId) {
+          setCurrentUserId(profileData.userId);
+          // Register to the socket server immediately so they can receive private messages!
+          registerUserForChat(profileData.userId); 
         }
       } catch (err: any) {
         console.error("Discovery Error:", err);
@@ -119,7 +130,7 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupCli
           {trainers.map((trainer: any) => (
             <div 
               key={trainer._id} 
-              className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-2 transition-all duration-500 flex flex-col h-full"
+              className="relative group bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-2 transition-all duration-500 flex flex-col h-full"
             >
               {/* Coach Identity Section */}
               <div className="flex items-center gap-5 mb-8">
@@ -169,8 +180,16 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupCli
 
               {/* Interaction CTA */}
               <button 
-                onClick={() => handleConnect(trainer._id)}
-                disabled={currentTrainerId === trainer._id || !!connectingId}
+                onClick={() => {
+                    // IF THEY ARE ALREADY CONNECTED: Toggle the Chat Window
+                    if (currentTrainerId === trainer._id) {
+                        setShowChatFor(showChatFor === trainer._id ? null : trainer._id);
+                    } else {
+                        // OTHERWISE: Connect them
+                        handleConnect(trainer._id);
+                    }
+                }}
+                disabled={currentTrainerId !== trainer._id && !!connectingId}
                 className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all hover:scale-[1.02] active:scale-95 shadow-lg flex items-center justify-center gap-2 ${
                   currentTrainerId === trainer._id 
                     ? "bg-green-100 text-green-700 border-2 border-green-200 cursor-default shadow-none" 
@@ -184,13 +203,14 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupCli
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    My Coach
+                    {showChatFor === trainer._id ? "Close Chat" : "Message Coach"}
                   </>
                 ) : (
                   "Connect to Trainer"
                 )}
               </button>
-              
+                              {/* NOTE: We completely remove the "absolute" container we added earlier! */}
+
               <p className="text-[9px] text-center mt-3 text-slate-300 font-bold uppercase tracking-tighter">
                 {currentTrainerId === trainer._id ? "Active Connection" : "Free for a limited time"}
               </p>
@@ -198,12 +218,18 @@ export default function Trainers({ onBecomeCoachClick, onLoginClick, onSignupCli
           ))}
         </div>
       )}
+            {/* ──────────────── Global Chat Modal ──────────────── */}
+      {/* Rendering it outside the animated cards ensures it stays full-screen! */}
+      {showChatFor && currentUserId && (
+          <ChatBox 
+              currentUserId={currentUserId} 
+              targetUserId={trainers.find((t: any) => t._id === showChatFor)?.userId || showChatFor} 
+              onClose={() => setShowChatFor(null)} 
+          />
+      )}
 
       {/* ──────────────── Become a Coach CTA ──────────────── */}
-      {/* 
-        This section encourages existing users to transition to the Trainer persona.
-        We only show this if the user isn't already a trainer (checked via userRole in localStorage).
-      */}
+
       {localStorage.getItem('userRole') !== 'trainer' && (
         <section className="mt-32 p-12 bg-slate-900 rounded-[3rem] text-center relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-orange-600/10 rounded-full -translate-y-32 translate-x-32 blur-3xl group-hover:bg-orange-600/20 transition-all duration-700" />

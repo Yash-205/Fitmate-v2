@@ -9,8 +9,7 @@ import User from '../src/models/User';
 // NO MOCKS - This is a TRUE End-to-End Integration Test
 // It will call real LLMs (Groq) and real Long-Term Memory (Mem0)
 
-describe('Complete User Onboarding Flow (Auth + Profile)', () => {
-  let token: string;
+describe.sequential('Complete User Onboarding Flow (Auth + Profile)', () => {
   const testUser = {
     email: `flow-${Date.now()}@example.com`,
     password: 'Password123!',
@@ -20,6 +19,8 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
   beforeAll(async () => {
     // Force NODE_ENV to test to ensure we use the test database
     process.env.NODE_ENV = 'test';
+    // Use a unique database for every test session to avoid cross-process clobbering
+    process.env.TEST_DB_NAME = `fitmate-test-${Date.now()}`;
     await connectDB();
     console.log('\n🚀 --- TEST START: Initializing Isolated Test Database ---');
     
@@ -79,7 +80,7 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
     console.log(`[Step 2 Status]: ${loginRes.status}`);
     console.log(`[Step 2 Body]:`, JSON.stringify(loginRes.body, null, 2));
     expect(loginRes.status).toBe(200);
-    token = loginRes.body.token;
+    const token = loginRes.body.token; // Move to local scope to prevent clobbering
     console.log('✅ Login Successful.');
 
     // 3. Create Profile (Includes Real AI Graph Generation)
@@ -118,6 +119,9 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
     console.log(`[Step 4 Body]:`, JSON.stringify(getProfileRes.body, null, 2));
     expect(getProfileRes.status).toBe(200);
     console.log('✅ Profile Data Verified.');
+    
+    // Give the AI API a moment to "breath" between heavy generation and chat
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     // 4.5 Chat with Agent about an injury
     console.log('\n[Step 4.5] Chatting about an injury...');
@@ -147,14 +151,26 @@ describe('Complete User Onboarding Flow (Auth + Profile)', () => {
     console.log(`[Chat Response Text]:\n${fullResponse || rawText}`);
     expect(chatRes.status).toBe(200);
 
-    // 5. Retrieve Mem0 Memories
+
     console.log('\n[Step 5] Retrieving Long-Term Memories (Mem0)...');
-    console.log('--- ⏳ Waiting 10 seconds for Cloud AI indexing to complete... ---');
-    await new Promise(resolve => setTimeout(resolve, 10000));
     
     const { getAllMemories } = await import('../src/ai/memory/mem0Service');
-    const memories = await getAllMemories(profileRes.body.userId);
-    console.log('✅ Real User Memories:');
+    let memories: any[] = [];
+    
+    // Polling loop: Check every 5s for up to 30s to allow Cloud AI indexing
+    for (let i = 0; i < 6; i++) {
+      const result = await getAllMemories(profileRes.body.userId);
+      if (result && Array.isArray(result) && result.length > 0) {
+        memories = result;
+        break;
+      }
+      
+      console.log(`[Wait] Memory indexing in progress (Attempt ${i + 1}/6)...`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+    
+    expect(memories.length).toBeGreaterThan(0);
+    console.log('✅ Real User Memories Found:');
     console.log(JSON.stringify(memories, null, 2));
     
     console.log('\n✨ --- AUTH FLOW COMPLETED WITH REAL AI RESULTS ---\n');

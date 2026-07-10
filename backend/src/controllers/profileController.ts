@@ -2,7 +2,7 @@ import { Response } from "express";
 import mongoose from "mongoose";
 import Profile from "../models/Profile";
 import { AuthRequest } from "../types/express";
-import { getMem0Client } from "../ai/memory/mem0Service";
+import { getMem0Client, getAllMemories } from "../ai/memory/mem0Service";
 import { runStrategyAgent } from "../ai/graphs/strategyGraph";
 import WorkoutPlan from "../models/WorkoutPlan";
 
@@ -129,5 +129,23 @@ export const selectTrainer = async (req: AuthRequest, res: Response) => {
     res.json({ message: "Successfully connected to trainer", profile });
   } catch (error) {
     res.status(500).json({ message: "Failed to connect to trainer" });
+  }
+};
+
+/**
+ * @desc    Fetch all Mem0 memories for the user
+ * @route   GET /api/profile/memories
+ * @access  Private
+ */
+export const getUserMemories = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const memories = await getAllMemories(String(userId));
+    res.json(memories);
+  } catch (error) {
+    console.error("Fetch memories error:", error);
+    res.status(500).json({ message: "Failed to fetch AI memories" });
   }
 };

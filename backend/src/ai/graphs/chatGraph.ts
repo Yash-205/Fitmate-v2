@@ -6,7 +6,7 @@ import { getMongoCheckpointer } from "../memory/checkpointer";
 
 // Define professional state with summarization support
 export const ChatState = Annotation.Root({
-  ...MessagesAnnotation.spec,
+  ...MessagesAnnotation.spec, // Provides the built-in 'messages' key with a reducer to append new messages
   summary: Annotation<string>,
 });
 

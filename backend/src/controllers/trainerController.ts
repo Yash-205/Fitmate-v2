@@ -84,8 +84,10 @@ export const getClients = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Trainer profile not found" });
     }
 
-    // Fetch clients assigned to this trainer
-    const clients = await Profile.find({ trainerId: trainer._id }).lean();
+    // Fetch clients assigned to this trainer and populate their User details
+    const clients = await Profile.find({ trainerId: trainer._id })
+      .populate("userId", "email name")
+      .lean();
 
     res.status(200).json(clients || []);
   } catch (error) {
@@ -101,7 +103,7 @@ export const getClients = async (req: AuthRequest, res: Response) => {
  */
 export const getDiscoveryList = async (req: AuthRequest, res: Response) => {
   try {
-    const trainers = await Trainer.find({ isActive: true }).select("-userId -createdAt -updatedAt");
+    const trainers = await Trainer.find({ isActive: true }).select("-createdAt -updatedAt");
     res.status(200).json(trainers);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch trainer list" });

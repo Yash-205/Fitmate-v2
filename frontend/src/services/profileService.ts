@@ -15,4 +15,5 @@ export const ProfileService = {
     fetchClient(`/profile/select-trainer/${trainerId}`, {
       method: 'POST',
     }),
+  getMemories: () => fetchClient('/profile/memories'),
 };

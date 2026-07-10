@@ -9,7 +9,7 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGO_URI as string;
-    const dbName = process.env.NODE_ENV === "test" ? "fitmate-test" : undefined;
+    const dbName = process.env.TEST_DB_NAME || (process.env.NODE_ENV === "test" ? "fitmate-test" : undefined);
 
     const conn = await mongoose.connect(mongoUri, { dbName });
 

@@ -4,3 +4,4 @@ export * from './chatService';
 export * from './workoutService';
 export * from './trainerService';
 export * from './profileService';
+export * from './messageService';

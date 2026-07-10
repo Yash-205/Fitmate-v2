@@ -1,5 +1,5 @@
 import express from "express";
-import { upsertProfile, getProfile, selectTrainer } from "../controllers/profileController";
+import { upsertProfile, getProfile, selectTrainer, getUserMemories } from "../controllers/profileController";
 import authMiddleware from "../middleware/authMiddleware";
 
 /**
@@ -14,6 +14,9 @@ router.post("/", authMiddleware, upsertProfile);
 
 // 🔹 Get profile
 router.get("/", authMiddleware, getProfile);
+
+// 🔹 Get AI Memories
+router.get("/memories", authMiddleware, getUserMemories);
 
 // 🔹 Select Personal Trainer
 router.post("/select-trainer/:trainerId", authMiddleware, selectTrainer);

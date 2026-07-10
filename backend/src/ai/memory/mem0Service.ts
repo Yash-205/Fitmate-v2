@@ -58,9 +58,30 @@ export const addInteraction = async (userId: string, interaction: { role: 'user'
 export const getAllMemories = async (userId: string) => {
   try {
     const mem0 = getMem0Client();
-    // Using a broad search term like "user" to retrieve baseline and lifestyle memories
-    const response = await mem0.search("user", { filters: { user_id: String(userId) } });
-    return response.results || response;
+    // Retrieve ALL memories for the user
+    const response: any = await mem0.getAll({ 
+      filters: { 
+        AND: [{ user_id: String(userId) }] 
+      } 
+    });
+    
+    // Some versions of the SDK return a paginated object { results: [...], ... }
+    const rawMemories = response?.results || response || [];
+    
+    // Clean up null/empty fields to keep the UI and logs clean
+    if (Array.isArray(rawMemories)) {
+      return rawMemories.map((m: any) => {
+        const cleaned: any = {};
+        Object.keys(m).forEach(key => {
+          if (m[key] !== null && m[key] !== undefined) {
+            cleaned[key] = m[key];
+          }
+        });
+        return cleaned;
+      });
+    }
+    
+    return rawMemories;
   } catch (err) {
     console.error("Mem0 getAll error:", err);
     return [];
