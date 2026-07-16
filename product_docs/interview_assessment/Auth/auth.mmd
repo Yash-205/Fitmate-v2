@@ -1,0 +1,48 @@
+graph TD
+    subgraph CLIENT["Frontend (React + Vite)"]
+        UI["AuthModal.tsx\nOnly asks: Name, Email, Password\n(No role field — everyone starts as learner)"]
+        LS["localStorage\n(token, role, isLoggedIn)"]
+        UI -->|"saves after success"| LS
+    end
+
+    subgraph SERVER["Backend (Express + TypeScript)"]
+        AR["Auth Routes\n/api/auth/signup\n/api/auth/login\n/api/auth/google"]
+        AM["authMiddleware\n(JWT Verify)"]
+        RM["isRole()\n(RBAC Check — DB lookup every time)"]
+        AC["Auth Controller"]
+        GV["Google Token Verifier\n(OAuth2Client)"]
+        JG["generateToken()\n(JWT Sign, 7d — userId only, no role)"]
+        TR["POST /api/trainer/profile\n(Learner → Trainer upgrade route)"]
+    end
+
+    subgraph DB["Database (MongoDB)"]
+        UM["User Model\n{ email, password, provider,\nrole: learner|trainer|admin, googleId }"]
+        PM["Profile Model\n(Learner profile data)"]
+        TM["Trainer Model\n(Trainer profile data)"]
+    end
+
+    subgraph GOOGLE["Google Auth"]
+        GP["Google Public Keys\n(Verify ID Token)"]
+    end
+
+    UI -->|"POST /api/auth/signup\n{ name, email, password } → role defaults to 'learner'"| AR
+    UI -->|"POST /api/auth/login\n{ email, password }"| AR
+    UI -->|"POST /api/auth/google\n{ credential }"| AR
+    AR --> AC
+    AC -->|verifyIdToken| GV
+    GV -->|checks signature| GP
+    AC -->|findOne / create| UM
+    AC -->|findOne — onboarding check| PM
+    AC -->|findOne — onboarding check| TM
+    AC -->|userId| JG
+    JG -->|"JWT + role + hasProfile"| UI
+
+    LS -->|"Authorization: Bearer token"| AM
+    AM -->|"decoded.userId → req.userId"| RM
+    RM -->|"User.findById — fresh role check"| UM
+
+    UI -->|"POST /api/trainer/profile\n(must be logged in as learner)"| TR
+    TR --> AM
+    AM --> RM
+    RM -->|"upsert Trainer doc"| TM
+    TM -->|"User.findByIdAndUpdate role → trainer"| UM

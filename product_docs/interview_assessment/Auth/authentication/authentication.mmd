@@ -1,0 +1,35 @@
+graph TD
+    subgraph CLIENT["Frontend (React + Vite)"]
+        UI["User Interface\n(AuthModal.tsx)\nOnly asks: Name, Email, Password"]
+        LS["localStorage\n(token, role, isLoggedIn)"]
+    end
+
+    subgraph SERVER["Backend (Express + TypeScript)"]
+        AR["Auth Routes\n/api/auth/signup\n/api/auth/login\n/api/auth/google"]
+        AC["Auth Controller\nauthController.ts"]
+        GV["OAuth2Client\ngoogle-auth-library"]
+        JG["generateToken(userId)\njwt.sign — expires 7d\n(role NOT in payload)"]
+    end
+
+    subgraph DB["MongoDB"]
+        UM["User Model\n{ email, password?,\nprovider, role, googleId? }"]
+        PM["Profile Model\n(learner profile)"]
+        TM["Trainer Model\n(trainer profile)"]
+    end
+
+    subgraph GOOGLE["Google Infrastructure"]
+        GP["Google Public Keys\n(Verify ID Token signature)"]
+    end
+
+    UI -->|"POST /signup { name, email, password }"| AR
+    UI -->|"POST /login { email, password }"| AR
+    UI -->|"POST /google { credential }"| AR
+    AR --> AC
+    AC -->|"verifyIdToken()"| GV
+    GV <-->|"Checks signature"| GP
+    AC -->|"findOne / create"| UM
+    AC -->|"findOne (onboarding check)"| PM
+    AC -->|"findOne (onboarding check)"| TM
+    AC -->|"userId"| JG
+    JG -->|"JWT + role + hasProfile"| UI
+    UI -->|"saves token + role"| LS
