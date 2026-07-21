@@ -10,25 +10,25 @@
 
 Fitmate's backend is an Express.js REST API with resource-oriented routes mounted in `app.ts`. Here is the full map:
 
-| Method | Route | Access | Description |
-|:-------|:------|:-------|:------------|
-| `POST` | `/api/auth/signup` | Public | Register with email + password |
-| `POST` | `/api/auth/login` | Public | Login, returns JWT |
-| `POST` | `/api/auth/google` | Public | Google OAuth via ID Token |
-| `GET` | `/api/auth/me` | Private | Verify token, return userId |
-| `POST` | `/api/profile` | Private | Create or update learner health profile (upsert) |
-| `GET` | `/api/profile` | Private | Get the authenticated user's profile |
-| `GET` | `/api/profile/memories` | Private | Fetch Mem0 AI memory for the user |
-| `POST` | `/api/profile/select-trainer/:trainerId` | Private | Connect learner to a trainer |
-| `GET` | `/api/workout` | Private | Fetch current workout plan |
-| `POST` | `/api/workout/generate` | Private | Generate or evolve a workout plan via AI |
-| `POST` | `/api/chat` | Private | Send a message to the AI coach (SSE stream) |
-| `GET` | `/api/chat/sessions` | Private | List all chat sessions for the user |
-| `GET` | `/api/chat/:threadId/history` | Private | Fetch message history for a thread |
-| `GET` | `/api/trainer/discovery` | Public | List all trainer profiles |
-| `POST` | `/api/trainer/profile` | Private (`learner` or `trainer`) | Submit trainer onboarding profile |
-| `GET` | `/api/trainer/profile` | Private (`trainer` only) | Get own trainer profile |
-| `GET` | `/api/trainer/clients` | Private (`trainer` only) | Get list of assigned clients |
+| Method   | Route                                      | Access                               | Description                                      |
+| :------- | :----------------------------------------- | :----------------------------------- | :----------------------------------------------- |
+| `POST` | `/api/auth/signup`                       | Public                               | Register with email + password                   |
+| `POST` | `/api/auth/login`                        | Public                               | Login, returns JWT                               |
+| `POST` | `/api/auth/google`                       | Public                               | Google OAuth via ID Token                        |
+| `GET`  | `/api/auth/me`                           | Private                              | Verify token, return userId                      |
+| `POST` | `/api/profile`                           | Private                              | Create or update learner health profile (upsert) |
+| `GET`  | `/api/profile`                           | Private                              | Get the authenticated user's profile             |
+| `GET`  | `/api/profile/memories`                  | Private                              | Fetch Mem0 AI memory for the user                |
+| `POST` | `/api/profile/select-trainer/:trainerId` | Private                              | Connect learner to a trainer                     |
+| `GET`  | `/api/workout`                           | Private                              | Fetch current workout plan                       |
+| `POST` | `/api/workout/generate`                  | Private                              | Generate or evolve a workout plan via AI         |
+| `POST` | `/api/chat`                              | Private                              | Send a message to the AI coach (SSE stream)      |
+| `GET`  | `/api/chat/sessions`                     | Private                              | List all chat sessions for the user              |
+| `GET`  | `/api/chat/:threadId/history`            | Private                              | Fetch message history for a thread               |
+| `GET`  | `/api/trainer/discovery`                 | Public                               | List all trainer profiles                        |
+| `POST` | `/api/trainer/profile`                   | Private (`learner` or `trainer`) | Submit trainer onboarding profile                |
+| `GET`  | `/api/trainer/profile`                   | Private (`trainer` only)           | Get own trainer profile                          |
+| `GET`  | `/api/trainer/clients`                   | Private (`trainer` only)           | Get list of assigned clients                     |
 
 ### Authentication Flow (JWT Lifecycle)
 
@@ -74,17 +74,17 @@ router.post("/profile", authMiddleware, isRole(["learner", "trainer"]), upsertTr
 
 ---
 
-## Q2: React with TypeScript — State Management for Profile + Workout Plans, Reusable Component Structure, Preventing Re-renders with Context
+## Q2: State Management for Profile + Workout Plans, Reusable Component Structure, Preventing Re-renders with Context ?(React with TypeScript)
 
 ### State Architecture
 
 Fitmate avoids a global state library (Redux, Zustand). Instead, state is split across three layers:
 
-| Layer | Mechanism | What It Holds |
-|:------|:----------|:--------------|
-| **Server State** | Direct `fetch` calls via `AuthService`, `fetchClient` | Profile, workout plan, trainer data (lives on the backend, cached in component state) |
-| **App-Level UI State** | `useAppFlow` custom hook in `App.tsx` | Which global modals are open (`AuthModal`, `ProfileSetupModal`, `TrainerSetupModal`) |
-| **Component-Local State** | `useState` inside each page/component | Form field values, loading flags, error messages |
+| Layer                           | Mechanism                                                  | What It Holds                                                                              |
+| :------------------------------ | :--------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| **Server State**          | Direct`fetch` calls via `AuthService`, `fetchClient` | Profile, workout plan, trainer data (lives on the backend, cached in component state)      |
+| **App-Level UI State**    | `useAppFlow` custom hook in `App.tsx`                  | Which global modals are open (`AuthModal`, `ProfileSetupModal`, `TrainerSetupModal`) |
+| **Component-Local State** | `useState` inside each page/component                    | Form field values, loading flags, error messages                                           |
 
 ### `useAppFlow` — The "Brain" Custom Hook
 
@@ -97,6 +97,7 @@ const [isTrainerSetupOpen, setIsTrainerSetupOpen] = useState(false);
 ```
 
 This hook is not a Context provider — it returns an object of state and handler functions. `App.tsx` destructures what it needs and passes specific callbacks (like `openLogin`) down as props. This means:
+
 - No Context wrapping, no Provider tree
 - No unnecessary re-renders (only `App.tsx` re-renders when modal state changes)
 - Child components receive only the specific callbacks they need
@@ -113,6 +114,7 @@ The design separates concerns into:
 ### Preventing Unnecessary Re-renders
 
 The current approach avoids re-render problems by not using a single large context:
+
 - **Props are specific callbacks, not objects.** `<Trainers onLoginClick={openLogin} />` — passing a stable function reference, not a changing object.
 - **Modals return `null` when closed.** `AuthModal` has `if (!isOpen) return null;` — it has zero DOM presence when closed, so no reconciliation overhead.
 - **Local state resets on modal open.** A `useEffect` fires when `isOpen` becomes `true`, resetting `authData`, `error`, and `view` — preventing stale re-renders from old state.
@@ -138,11 +140,13 @@ graph LR
 ### Embedded vs. Referenced — Key Decisions
 
 **Embedded (WorkoutPlan):** The full workout plan — `mesoPhases[]` (strategic 4–12 week roadmap) and `schedule[]` (7-day tactical plan with exercises) — is embedded directly inside the `WorkoutPlan` document. This is correct because:
+
 - The plan is always fetched as a whole (not individual days or phases in isolation)
 - It is owned entirely by one user (no sharing)
 - Embedding avoids a join query at read time
 
 **Referenced (Profile → Trainer):** The `Profile.trainerId` is a reference (ObjectId) to the `Trainer` collection, not embedded. This is correct because:
+
 - Trainer data is shared across many learner profiles
 - Trainer profile can change independently without rewriting every learner's document
 
@@ -151,6 +155,7 @@ graph LR
 ### Why We Don't Store JWTs in the Database
 
 JWTs are stateless. The token carries its own expiry (`exp` claim) and is verified server-side by the secret key alone. Storing tokens in MongoDB would:
+
 1. Add a database hit to every request (defeating the stateless benefit)
 2. Require a token blacklist table to handle logout — adding complexity
 
@@ -160,12 +165,12 @@ The current approach is that logout is client-side only (clearing `localStorage`
 
 Fitmate currently uses MongoDB's default `_id` index on every collection. The next indexing improvements should be:
 
-| Collection | Index to Add | Query it Serves |
-|:-----------|:-------------|:----------------|
+| Collection      | Index to Add                     | Query it Serves                                                       |
+| :-------------- | :------------------------------- | :-------------------------------------------------------------------- |
 | `WorkoutPlan` | `{ userId: 1, createdAt: -1 }` | `findOne({ userId }).sort({ createdAt: -1 })` in `getWorkoutPlan` |
-| `ChatSession` | `{ userId: 1, updatedAt: -1 }` | `find({ userId }).sort({ updatedAt: -1 })` in `getSessions` |
-| `Profile` | `{ userId: 1 }` (unique) | `findOne({ userId })` on every authenticated request |
-| `Trainer` | `{ userId: 1 }` | `findOne({ userId })` in login and trainer endpoints |
+| `ChatSession` | `{ userId: 1, updatedAt: -1 }` | `find({ userId }).sort({ updatedAt: -1 })` in `getSessions`       |
+| `Profile`     | `{ userId: 1 }` (unique)       | `findOne({ userId })` on every authenticated request                |
+| `Trainer`     | `{ userId: 1 }`                | `findOne({ userId })` in login and trainer endpoints                |
 
 ---
 
@@ -176,6 +181,7 @@ Fitmate currently uses MongoDB's default `_id` index on every collection. The ne
 Fitmate's AI layer is a Python/LangGraph service running as a separate process. The Node.js backend communicates with it by calling LangChain/LangGraph agents directly via a Node.js LangChain client (not a separate HTTP service — it is imported and called in-process).
 
 Key AI endpoints:
+
 - **Chat:** `chatController.ts` calls `streamAgent(message, profile, threadId)` from `chatGraph.ts`. This streams an async generator of SSE events.
 - **Workout generation:** `workoutController.ts` calls `runStrategyAgent(profile, userId)` and `runEvolutionAgent(...)` from dedicated graph files.
 - **Memory:** After every chat turn, `addInteraction()` is called (fire-and-forget) to sync the conversation to Mem0.
@@ -200,10 +206,12 @@ This avoids request timeout on long AI generations and gives users instant token
 ### Failure Handling
 
 Currently, failures are caught at the controller level with a try/catch that:
+
 - Returns `res.status(500).json({ message: "..." })` if headers haven't been sent yet
 - Writes an SSE error event and calls `res.end()` if streaming has already started
 
 **What the ideal production upgrade looks like:**
+
 - **Retry with backoff** for transient LLM API errors (429 rate limits, 5xx): use a library like `p-retry` or `tenacity` (Python-side) with exponential backoff + jitter.
 - **Structured output validation:** The AI agents use Zod schemas to validate LLM output. If the schema fails, the node should re-prompt once before returning an error — not silently produce a malformed plan.
 - **Fallback plan:** If the Evolution Agent fails, fall back to returning the last successfully generated plan rather than a 500.
@@ -292,15 +300,18 @@ Any `onComplete` or `onFeedback` callbacks passed into child plan components sho
 
 **1. Split server state from UI state**
 Currently, plan data is fetched in the page component and stored in local `useState`. The ideal upgrade is React Query or SWR — which adds:
+
 - **Caching:** The plan doesn't re-fetch on every navigation back to the workout page; it uses the cached version until stale.
 - **Background refetching:** Data stays fresh without blocking the render.
 - **Loading/error states:** Built-in, no boilerplate.
 
 **2. Code splitting by route**
 Since Fitmate uses Vite, each route should be lazily imported:
+
 ```typescript
 const Workout = lazy(() => import('./pages/Workout'));
 ```
+
 This means the AI coaching page's JS bundle is not downloaded until the user navigates there — reducing the initial bundle size.
 
 **3. Fetch priority**

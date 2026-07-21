@@ -6,43 +6,29 @@ import Profile from "../models/Profile";
 import Trainer from "../models/Trainer";
 import { OAuth2Client } from "google-auth-library";
 
+// Initialize Google OAuth2 client with the environment's client ID.
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
- * Authentication Controller
- * 
- * Handles user registration, login, and external authentication (Google).
- * 
- * --- THE PROVIDER FIELD ---
- * What: The 'provider' field in the User model identifies the source of the authentication.
- * Values: 'local' (email/password) or 'google' (Google OAuth).
- * 
- * Why: 
- * 1. Security: It prevents "account takeover" via credential stuffing. For example, if a user 
- *    signed up via Google, they don't have a password. Checking 'provider !== local' ensures 
- *    that someone can't log in using just the email through the standard login form.
- * 2. Logic Routing: Different providers may require different validation steps or store 
- *    different identifiers (like googleId).
- */
-
-/**
- * @desc    Register a new user (Local)
- * @route   POST /api/auth/signup
- * @access  Public
+ * Handles user registration via email and password.
+ * Checks for existing users, hashes the password, and creates the User record.
  */
 export const signup = async (req: Request, res: Response) => {
   try {
+    // Extract required fields from the incoming request body.
     const { email, password, name, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
+    // Verify that the email is not already registered in the system.
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // Hash the password for secure storage before creating the user.
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
@@ -53,11 +39,14 @@ export const signup = async (req: Request, res: Response) => {
       role: role || "learner",
     });
 
+    // Return the created user data along with a generated JWT and default profile flags.
     res.status(201).json({
       message: "User created successfully",
       token: generateToken(user._id.toString()),
       role: user.role,
       name: user.name,
+      hasProfile: false,
+      hasTrainerProfile: false,
     });
   } catch (error) {
     console.error("[Signup Error]", error);
@@ -66,12 +55,12 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 /**
- * @desc    Authenticate user & get token (Local)
- * @route   POST /api/auth/login
- * @access  Public
+ * Authenticates an existing local user and issues a JWT token.
+ * Validates credentials and checks for existing profile/trainer records.
  */
 export const login = async (req: Request, res: Response) => {
   try {
+    // Extract credentials from the request body.
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -79,6 +68,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
+    // Find the user by email and ensure they registered via local email/password.
     const user = await User.findOne({ email });
     if (!user) {
       console.log("[Login Failed] User not found:", email);
@@ -89,6 +79,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid credentials: Wrong auth provider" });
     }
 
+    // Compare the provided password against the stored bcrypt hash.
     const isMatch = await bcrypt.compare(
       password,
       user.password as string
@@ -99,9 +90,11 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid credentials: Password incorrect" });
     }
 
+    // Check if the user has completed their learner or trainer onboarding profiles.
     const profile = await Profile.findOne({ userId: user._id });
     const trainerProfile = await Trainer.findOne({ userId: user._id });
 
+    // Return auth token and profile presence flags to direct frontend routing.
     res.json({
       token: generateToken(user._id.toString()),
       role: user.role,
@@ -116,66 +109,60 @@ export const login = async (req: Request, res: Response) => {
 };
 
 /**
- * @desc    Google Authentication
- * @route   POST /api/auth/google
- * @access  Public
+ * Handles authentication via Google OAuth.
+ * Verifies the Google ID token and creates or logs in the user automatically.
  */
 export const googleAuth = async (req: Request, res: Response) => {
   try {
-    // 1. Extract the Google ID Token (credential) sent from the frontend
+    // Extract the Google ID token credential from the request body.
     const { credential } = req.body;
 
-    // 2. Immediate validation: Ensure the token exists
     if (!credential) {
       return res.status(400).json({ message: "Google credential is required" });
     }
 
-    // 3. Verify the token using Google's public keys. 
-    // The 'audience' check ensures the token was intended for YOUR application (your Client ID).
+    // Verify the Google token against your application's client ID.
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    // 4. Extract the payload containing user data (email, name, picture, etc.)
+    // Extract the payload to get user identity details like email and name.
     const payload = ticket.getPayload();
     
-    // 5. Verify that the payload is valid and contains an email address
     if (!payload || !payload.email) {
       return res.status(400).json({ message: "Invalid Google token" });
     }
 
-    // sub: The unique, permanent ID Google gives to this user
+    // Extract relevant identifiers from the payload, using 'sub' as the permanent Google ID.
     const { email, sub: googleId, name } = payload;
 
-    // 6. Check if a user with this email already exists in our database
+    // Search for an existing user or create a new Google-provider record.
     let user = await User.findOne({ email });
 
-    // 7. If the user doesn't exist, create a new record in MongoDB
     if (!user) {
       user = await User.create({
         email,
         name,
         googleId,
-        provider: "google", // Mark as Google provider to differentiate from email/password users
-        role: "learner",    // Default role
+        provider: "google",
+        role: "learner",
       });
     }
 
-    // 8. Look for associated Profile and Trainer records to inform the frontend
+    // Look for associated Profile and Trainer records to inform the frontend onboarding state.
     const profile = await Profile.findOne({ userId: user._id });
     const trainerProfile = await Trainer.findOne({ userId: user._id });
 
-    // 9. Return our app's own JWT token and user status flags
+    // Return our application's JWT along with user status flags.
     res.json({
       token: generateToken(user._id.toString()),
       role: user.role,
       name: user.name,
-      hasProfile: !!profile,          // Tells frontend if it needs to show onboarding
+      hasProfile: !!profile,
       hasTrainerProfile: !!trainerProfile,
     });
   } catch (error) {
-    // 10. Log the internal error for debugging and return a 500 status
     console.error("[Google Auth Error]", error);
     res.status(500).json({ message: "Google auth failed" });
   }

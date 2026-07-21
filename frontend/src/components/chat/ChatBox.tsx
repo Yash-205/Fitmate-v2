@@ -8,16 +8,16 @@ interface Message {
   receiverId: string;
   message: string;
 }
-
+interface ChatBoxProps {
+    currentUserId: string;
+    targetUserId: string;
+    onClose: () => void;
+}
 export const ChatBox = ({ 
     currentUserId, 
     targetUserId, 
     onClose 
-}: { 
-    currentUserId: string; 
-    targetUserId: string;
-    onClose: () => void;
-}) => {
+}: ChatBoxProps) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,10 +31,11 @@ export const ChatBox = ({
                 }
             })
             .catch(err => console.error("Failed to load history", err));
-        // 2. Setup So
+        // 2. Setup Socket -> for the upcoming new chats
         const socket = getSocket();
 
         socket.on("receive_message", (newMessage: Message) => {
+            // check for the messages if htey belong to this converdsation or not 
             if (
                 (newMessage.senderId === targetUserId && newMessage.receiverId === currentUserId) ||
                 (newMessage.senderId === currentUserId && newMessage.receiverId === targetUserId)

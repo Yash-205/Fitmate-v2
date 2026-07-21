@@ -5,19 +5,24 @@ import { GoogleLogin } from '@react-oauth/google';
 
 import { AuthService } from '@/services/api';
 
+// Props for AuthModal defining state and callbacks.
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialView?: 'login' | 'signup';
+  // Callback after successful auth. hasProfile directs to onboarding vs dashboard
   onSuccess: (hasProfile: boolean) => void;
 }
 
+// Renders the authentication modal for user login and signup flows.
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'login', onSuccess }) => {
+  // Initialize state for view, auth data, errors, and loading status.
   const [view, setView] = useState<'login' | 'signup'>(initialView);
   const [authData, setAuthData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Reset modal state to defaults whenever it opens.
   useEffect(() => {
     if (isOpen) {
       setView(initialView);
@@ -28,12 +33,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
 
   if (!isOpen) return null;
 
+  // Handle form submission to login or signup via the API.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
       setError('');
 
+      // Execute login or signup based on current view.
       let data;
       if (view === 'signup') {
         data = await AuthService.signup(authData);
@@ -49,6 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
     }
   };
 
+  // Process successful Google OAuth login and update state.
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setLoading(true);
@@ -64,6 +72,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
   };
 
   return (
+    // Render modal backdrop and main container.
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div
         className="bg-white w-full max-w-[440px] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-500 relative"
@@ -81,6 +90,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
         </button>
 
         <div className="p-10 space-y-8">
+          {/* Display view-specific title and description. */}
           <div className="space-y-2">
             <h2 id="auth-modal-title" className="text-2xl font-black text-slate-900">
               {view === 'login' ? 'Log In' : 'Create Account'}
@@ -99,6 +109,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Show Full Name field only during signup. */}
             {view === 'signup' && (
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-900 ml-1">Full Name</label>
@@ -110,6 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
               </div>
             )}
 
+            {/* Email field configuration. */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-900 ml-1">Email</label>
               <input
@@ -119,6 +131,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
               />
             </div>
 
+            {/* Password field configuration. */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-900 ml-1">Password</label>
               <input
@@ -144,6 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
             </Button>
           </form>
 
+          {/* Separator for Google OAuth. */}
           <div className="relative flex items-center py-2">
             <div className="flex-grow border-t border-slate-200"></div>
             <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">Or continue with</span>
@@ -160,6 +174,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialVi
             />
           </div>
 
+          {/* Toggle button between login and signup views. */}
           <p className="text-center text-sm font-medium text-slate-500">
             {view === 'login' ? "Don't have an account?" : "Already a member?"}
             <button
