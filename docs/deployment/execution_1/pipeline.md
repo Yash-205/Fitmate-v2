@@ -133,49 +133,51 @@ Nginx will do two things: Serve your Vite `dist` folder on the main URL, and pro
    sudo nano /etc/nginx/sites-available/default
    ```
 2. Delete everything inside and paste this:
-   ```nginx
+
+```nginx
    server {
 
        listen 80;
-     
+   
        server_name _;
 
        # 1. Serve the Frontend (React/Vite)
-     
+   
        root /home/ubuntu/fitmate/code/frontend/dist;
-     
+   
        index index.html;
 
        location / {
-     
+   
            try_files $uri $uri/ /index.html;
        }
 
        # 2. Proxy the Backend (Express API via Docker)
-     
+   
        location /api/ {
-     
+   
            proxy_pass http://127.0.0.1:8000;
-         
+       
            proxy_http_version 1.1;
-         
+       
            proxy_set_header Host $host;
-         
+       
            proxy_set_header X-Real-IP $remote_addr;
-         
+       
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
            # Critical settings for streaming AI answers without timeouts
-         
+       
            proxy_read_timeout 300s;
-         
+       
            proxy_send_timeout 300s;
-         
+       
            proxy_buffering off;
        }
-     
+   
    }
-   ```
+```
+
 3. Save and exit (Ctrl+O, Enter, Ctrl+X).
 4. Restart Nginx:
    ```bash
