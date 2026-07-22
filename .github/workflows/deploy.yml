@@ -1,0 +1,34 @@
+name: Deploy Fullstack to EC2
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/fitmate/code
+            git pull origin main
+            # 1. Rebuild Frontend
+            cd frontend
+            npm install
+            npm run build
+            # 2. Rebuild Backend Docker image
+            cd ../backend
+            docker build -t fitmate-backend .
+            # 3. Stop and clean up old container
+            docker stop fitmate-app || true
+            docker rm fitmate-app || true
+            # 4. Run new backend container
+            docker run -d \
+              --name fitmate-app \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              --env-file ~/fitmate/.env \
+              fitmate-backend

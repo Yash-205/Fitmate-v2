@@ -320,7 +320,7 @@ jobs:
           
               -p 8000:8000 \
           
-              --env-file ~/fit.env \
+              --env-file ~/fitmate/.env \
           
               fitmate-backend
 ```
